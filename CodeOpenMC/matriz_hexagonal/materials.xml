@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<materials>
+  <material depletable="true" id="1" name="Uránio Metálico">
+    <density units="g/cm3" value="18.0" />
+    <nuclide ao="6.435722127192882e-05" name="U234" />
+    <nuclide ao="0.007200291750940372" name="U235" />
+    <nuclide ao="0.9927023702331531" name="U238" />
+    <nuclide ao="3.298079463465964e-05" name="U236" />
+  </material>
+  <material id="2" name="Água Leve">
+    <density units="g/cm3" value="1.0" />
+    <nuclide ao="1.99968852" name="H1" />
+    <nuclide ao="0.00031148" name="H2" />
+    <nuclide ao="0.999621" name="O16" />
+    <nuclide ao="0.000379" name="O17" />
+  </material>
+  <material id="3" name="Ar">
+    <density units="g/cm3" value="0.001225" />
+    <nuclide ao="0.999621" name="O16" />
+    <nuclide ao="0.000379" name="O17" />
+  </material>
+</materials>
