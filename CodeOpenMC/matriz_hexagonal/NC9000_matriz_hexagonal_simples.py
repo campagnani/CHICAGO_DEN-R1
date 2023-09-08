@@ -106,16 +106,10 @@ ar.add_element('O', 1)
 ar.set_density('g/cm3', 0.001225)
 
 aluminio = openmc.Material(name='Alúminio')
-ar.add_element('Al', 1)
-ar.set_density('g/cm3', 2.7)
+aluminio.add_element('Al', 1)
+aluminio.set_density('g/cm3', 2.7)
 
-inox = openmc.Material(name='Aço Inox')
-inox.add_element('Fe', 80)
-inox.add_element('C', 2)
-inox.add_element('Cr', 18)
-inox.set_density('g/cm3', 8.0)
-
-materiais = openmc.Materials([combustivel,moderador,ar,aluminio,inox])
+materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
 materiais.export_to_xml()
 
 
@@ -129,89 +123,66 @@ materiais.export_to_xml()
 
 
 #Variáveis de Dimenções dos planos
-referencia_terra = 0                                            #Fronteira de vácuo
-fundo_tanque = referencia_terra + Tanque_Espessura
-vareta_altura = fundo_tanque + Vareta_combustivel_Comprimento   #Fronteira de vácuo
+nivel_dagua = 1*2.54
+fundo_tanque = -(Vareta_combustivel_Comprimento - nivel_dagua)/2 #Fronteira de vácuo
+vareta_altura = fundo_tanque + Vareta_combustivel_Comprimento - nivel_dagua  #Fronteira de vácuo
 lateral_tanque_interna = Tanque_Diametro - Tanque_Espessura
-lateral_tanque_externa = Tanque_Diametro
-
-##Planos externos a vareta
-grade_inferior = fundo_tanque + Grade_Espessura
-refletor_inferior_externo = fundo_tanque + Grade_Posicionamento 
-grade_superior = refletor_inferior_externo + Grade_Espessura
-refletor_superior_externo = vareta_altura - 6*2.54 #Nível d'água
 
 ##Planos internos a vareta
 refletor_interno = fundo_tanque + 6.5*2.54
 suporte_interno = refletor_interno + 0.2
 elemento_combustivel = suporte_interno + Barra_combustivel_Comprimento*5
 
-
-
+##Planos internos a vareta central
+#refletor_interno_central = fundo_tanque + 5*2.54
+#suporte_interno_central = refletor_interno + 0.2
 
 
 
 
 #Criação das formas geométricas
-plano_referencia                = openmc.ZPlane(z0=referencia_terra,boundary_type='vacuum')
-plano_vareta_altura             = openmc.ZPlane(z0=referencia_terra,boundary_type='vacuum')
-plano_fundo_tanque              = openmc.ZPlane(z0=fundo_tanque)
-plano_grade_inferior            = openmc.ZPlane(z0=grade_inferior)
-plano_refletor_inferior_externo = openmc.ZPlane(z0=refletor_inferior_externo)
-plano_grade_superior            = openmc.ZPlane(z0=grade_superior)
-plano_refletor_superior_externo = openmc.ZPlane(z0=refletor_superior_externo)
+plano_fundo_tanque              = openmc.ZPlane(z0=fundo_tanque,boundary_type='vacuum')
 plano_refletor_interno          = openmc.ZPlane(z0=refletor_interno)
 plano_suporte_interno           = openmc.ZPlane(z0=suporte_interno)
 plano_elemento_combustivel      = openmc.ZPlane(z0=elemento_combustivel)
+plano_vareta_altura             = openmc.ZPlane(z0=vareta_altura,boundary_type='vacuum')
+#plano_suporte_interno_central   = openmc.ZPlane(z0=suporte_interno_central)
+#plano_refletor_interno_central  = openmc.ZPlane(z0=refletor_interno_central)
 cilindro_raio_interno_elemento  = openmc.ZCylinder(r=Barra_combustivel_Diametro_interno/2)
 cilindro_raio_externo_elemento  = openmc.ZCylinder(r=Barra_combustivel_Diametro_externo/2)
 cilindro_raio_interno_vareta    = openmc.ZCylinder(r=Vareta_combustivel_Diametro_interno/2)
 cilindro_raio_externo_vareta    = openmc.ZCylinder(r=Vareta_combustivel_Diametro_interno/2+Vareta_combustivel_Espessura)
-cilindro_raio_interno_tanque    = openmc.ZCylinder(r=lateral_tanque_interna/2)
-cilindro_raio_externo_tanque    = openmc.ZCylinder(r=lateral_tanque_externa/2, boundary_type='vacuum')
+cilindro_raio_interno_tanque    = openmc.ZCylinder(r=lateral_tanque_interna/2,boundary_type='vacuum')
 
-
-#Celulas para o Universo Vareta Combustível e vareta central
-celula_fundo_tanque             = openmc.Cell(fill=aluminio,    region=+plano_referencia&-plano_fundo_tanque)
+#Universo Vareta
+celula_moderador                = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_vareta_altura&+cilindro_raio_externo_vareta)
 celula_vareta                   = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
-## Parte Inferior
-celula_grade_inferior           = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque&-plano_grade_inferior&+cilindro_raio_externo_vareta)
 celula_refletor_interno         = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_suporte_interno&-cilindro_raio_interno_vareta)
-celula_refletor_externo         = openmc.Cell(fill=moderador,   region=+plano_grade_inferior&-plano_refletor_inferior_externo&+cilindro_raio_externo_vareta)
-## Suporte
 celula_suporte_interno          = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno&-plano_suporte_interno&-cilindro_raio_interno_vareta)
-## Parte superior
-celula_ar_interno_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&-cilindro_raio_interno_elemento)
 celula_elemento_combustivel     = openmc.Cell(fill=combustivel, region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_interno_elemento&-cilindro_raio_externo_elemento)
+celula_ar_interno_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&-cilindro_raio_interno_elemento)
 celula_ar_externo_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_externo_elemento&-cilindro_raio_interno_vareta)
-celula_grade_superior           = openmc.Cell(fill=aluminio,    region=+plano_refletor_inferior_externo&-plano_grade_superior&+cilindro_raio_externo_vareta)
-celula_moderador                = openmc.Cell(fill=moderador,   region=+plano_grade_superior&-plano_refletor_superior_externo&+cilindro_raio_externo_vareta)
 celula_ar_superior_interno      = openmc.Cell(fill=ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
-celula_ar_superior_externo      = openmc.Cell(fill=ar,          region=+plano_refletor_superior_externo&-plano_vareta_altura&cilindro_raio_externo_vareta)
 
 #Celulas específicas para o Universo Vareta Central (fonte)
-celula_suporte_interno_fonte    = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno&-plano_suporte_interno&-cilindro_raio_interno_vareta)
-celula_moderador_interno_fonte  = openmc.Cell(fill=moderador,   region=+plano_suporte_interno&-plano_vareta_altura&+cilindro_raio_interno_vareta)
-celula_ar_interno_fonte         = openmc.Cell(fill=ar,          region=+plano_refletor_superior_externo&-plano_vareta_altura&+cilindro_raio_externo_vareta)
+#celula_refletor_fonte           = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_refletor_interno_central&-cilindro_raio_interno_vareta)
+#celula_suporte_interno_fonte    = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno_central&-plano_suporte_interno_central&-cilindro_raio_interno_vareta)
+#celula_moderador_interno_fonte  = openmc.Cell(fill=moderador,   region=+plano_suporte_interno_central&-plano_vareta_altura&-cilindro_raio_interno_vareta)
 
 #Celula para universo apenas com refletor
-celula_refletor = openmc.Cell(fill=moderador, region=+plano_fundo_tanque&-plano_vareta_altura)
+celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque&-plano_vareta_altura)
 
-#Celula para definir a lateral do tanque (o fundo do tanque já está definido na matriz hexagonal)
-celula_lateral_tanque           = openmc.Cell(fill=inox, region=+cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_referencia&-plano_vareta_altura)
 
 
 
 #Universos
-universo_vareta_combustível     = openmc.Universe(cells=(celula_fundo_tanque,celula_vareta,celula_grade_inferior,celula_refletor_interno,celula_refletor_externo,\
-                                                         celula_suporte_interno, celula_ar_interno_elemento, celula_elemento_combustivel,celula_ar_externo_elemento,\
-                                                         celula_grade_superior, celula_moderador, celula_ar_superior_interno, celula_ar_superior_externo,))
+universo_vareta_combustível     = openmc.Universe(cells=(celula_vareta,celula_refletor_interno, celula_suporte_interno, celula_ar_interno_elemento, \
+                                                         celula_elemento_combustivel,celula_ar_externo_elemento, celula_moderador, celula_ar_superior_interno,))
 
-universo_vareta_central         = openmc.Universe(cells=(celula_fundo_tanque,celula_vareta,celula_grade_inferior,celula_refletor_interno,celula_refletor_externo,\
-                                                         celula_suporte_interno_fonte, celula_moderador_interno_fonte,\
-                                                         celula_grade_superior, celula_moderador,celula_ar_interno_fonte , celula_ar_superior_externo,))
+#universo_vareta_central         = openmc.Universe(cells=(celula_vareta,celula_refletor_fonte,celula_suporte_interno_fonte, \
+#                                                         celula_moderador_interno_fonte, celula_moderador))
 
-universo_refletor               = openmc.Universe(cells=(celula_refletor,celula_fundo_tanque,))
+universo_refletor               = openmc.Universe(cells=(celula_refletor,))
 
 
 
@@ -241,7 +212,7 @@ anel_comb_mod_4  = [universo_vareta_combustível]*24
 anel_comb_mod_3  = [universo_vareta_combustível]*18
 anel_comb_mod_2  = [universo_vareta_combustível]*12
 anel_comb_mod_1  = [universo_vareta_combustível]*6
-anel_font_mod_0  = [universo_vareta_central]
+anel_font_mod_0  = [universo_vareta_combustível]#[universo_vareta_central]
 
 matriz_hexagonal.universes = [anel_misturado_10, anel_comb_mod_9, anel_comb_mod_8, anel_comb_mod_7, anel_comb_mod_6, anel_comb_mod_5, anel_comb_mod_4, anel_comb_mod_3, anel_comb_mod_2, anel_comb_mod_1, anel_font_mod_0]
 print(matriz_hexagonal)
@@ -250,7 +221,7 @@ celula_reator_matriz_hexagonal  = openmc.Cell(fill=matriz_hexagonal, region=-cil
 
 ############ Exportar Geometrias
 
-geometria = openmc.Geometry([celula_reator_matriz_hexagonal,celula_lateral_tanque])
+geometria = openmc.Geometry([celula_reator_matriz_hexagonal])
 geometria.export_to_xml()
 
 
@@ -281,24 +252,30 @@ secao_transversal.colors = colors = {
 
 ############ Plotar em 3D
 
-plot_3d = openmc.Plot.from_geometry(geometria)
-plot_3d.type = 'voxel'
-plot_3d.filename = 'plot_voxel'
-plot_3d.pixels = (1000, 1000, 1000)
-plot_3d.color_by = 'material'
-plot_3d.colors = colors = {
-    moderador: 'blue',
-    combustivel: 'olive',
-    ar: 'white'
-}
-plot_3d.width = (150., 150., 150.)
+plotar3d = input("Plortar em 3D? [S/n]")
+if (plotar3d!="n"):
+    plot_3d = openmc.Plot.from_geometry(geometria)
+    plot_3d.type = 'voxel'
+    plot_3d.filename = 'plot_voxel'
+    plot_3d.pixels = (1000, 1000, 1000)
+    plot_3d.color_by = 'material'
+    plot_3d.colors = colors = {
+        combustivel: 'olive',
+        moderador: 'blue',
+        ar: 'white'
+    }
+    plot_3d.width = (15., 15., 15.)
+    ############ Exportar Plots e Plotar
+    plotagem = openmc.Plots((secao_transversal, plot_3d))
+    plotagem.export_to_xml()  
+    openmc.plot_geometry()
+    os.system('openmc-voxel-to-vtk plot_voxel.h5 -o plot_voxel')
+else:
+    ############ Exportar Plots e Plotar
+    plotagem = openmc.Plots((secao_transversal,))
+    plotagem.export_to_xml()  
+    openmc.plot_geometry()
 
-
-############ Exportar Plots e Plotar
-plotagem = openmc.Plots((secao_transversal, plot_3d))
-plotagem.export_to_xml()  
-openmc.plot_geometry()
-os.system('openmc-voxel-to-vtk plot_voxel.h5 -o plot_voxel.vtk')
 
 
 
@@ -311,7 +288,7 @@ os.system('openmc-voxel-to-vtk plot_voxel.h5 -o plot_voxel.vtk')
 ############ Definição da Simulação ############
 ################################################
 settings = openmc.Settings()
-settings.particles = 1000
+settings.particles = 10000
 settings.batches = 110
 settings.inactive = 10
 settings.source = openmc.Source(space=openmc.stats.Point())
