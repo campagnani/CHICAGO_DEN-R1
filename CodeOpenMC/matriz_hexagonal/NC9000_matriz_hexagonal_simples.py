@@ -20,16 +20,20 @@ os.system('clear')
 
 ############ Características construtivas
 
-#Barra combustível:
+######### Barra combustível ##########
+
 	#Composição: urânio natural compactado
-	#Revestimento: alumínio (Espessura do revestimento?)
+	#Revestimento: alumínio (0.1 cm de espessura)
+clad_combustivel_diametro_externo = 3.07  #cm
+clad_combustivel_diametro_interno = 1.27  #cm
 	#Quantidade: 			1410
+    #Densidade 
 Barra_combustivel_Densidade = 			18.0	#± 0,1 g/cm³.
 	#Geometria: Barra anelar
 	#Dimensões:
-Barra_combustivel_Comprimento       =   21.45   #± 0,5 mm.
-Barra_combustivel_Diametro_externo  =   3.07    #± 0,1 mm.
-Barra_combustivel_Diametro_interno  =   1.27    #± 0,1 mm.
+Barra_combustivel_Comprimento       =   21.45   #± 0,5 cm.
+Barra_combustivel_Diametro_externo  =   2.87    #± 0,1 cm.
+Barra_combustivel_Diametro_interno  =   1.47    #± 0,1 cm.
     #Peso: 				1,867	Kg
 		#Peso total: 			2,63	t
 
@@ -37,8 +41,8 @@ Barra_combustivel_Diametro_interno  =   1.27    #± 0,1 mm.
 	#Composição: Alumínio
 	#Quantidade: 283 (282 com combustível e 1 com a fonte de nêutrons).
 	#Dimensões:
-Vareta_combustivel_Espessura        = 	0.1     #mm
-Vareta_combustivel_Diametro_interno =   3.32    #± 0,2 mm.
+Vareta_combustivel_Espessura        = 	0.1     #cm
+Vareta_combustivel_Diametro_interno =   3.32    #± 0,2 cm.
 Vareta_combustivel_Comprimento      =   149.86  #59"
 
 #Interior:
@@ -59,7 +63,8 @@ Tanque_Altura       =	150
 Tanque_Diametro     =	122
 Tanque_Espessura    =	1.2
 
-#Moderador e refletor:
+######### Moderador e refletor ##########
+
     #Tipo: água leve.
     #Obs:  sofre um contínuo tratamento por resinas de deionização. São usadas, em série, duas colunas de resina, uma para os aniontes e outra para os cationtes.
     #Nível: 1350 mm de altura do fundo do tanque
@@ -92,30 +97,55 @@ Grade_Posicionamento = 28.4        #Segunda: 28,4 cm do fundo do tanque.
 ############ Definição dos Materiais ###########
 ################################################
 
-combustivel = openmc.Material(name='Uránio Metálico')
-combustivel.add_element('U', 1, enrichment=0.711)
-combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
+#combustivel = openmc.Material(name='Uránio Metálico')
+#combustivel.add_element('U', 1, enrichment=0.711)
+#combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
+#
+#moderador = openmc.Material(name='Água Leve')
+#moderador.add_element('H', 2)
+#moderador.add_element('O', 1)
+#moderador.set_density('g/cm3', 1.0)
+# 
+#ar = openmc.Material(name='Ar')
+#ar.add_element('O', 1)
+#ar.set_density('g/cm3', 0.001225)
+#
+#aluminio = openmc.Material(name='Alúminio')
+#aluminio.add_element('Al', 1)
+#aluminio.set_density('g/cm3', 2.7)
+#
+#materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
+#materiais.export_to_xml()
 
-moderador = openmc.Material(name='Água Leve')
-moderador.add_element('H', 2)
-moderador.add_element('O', 1)
-moderador.set_density('g/cm3', 1.0)
- 
-ar = openmc.Material(name='Ar')
-ar.add_element('O', 1)
-ar.set_density('g/cm3', 0.001225)
+aluminio = openmc.Material(temperature = 750)
+aluminio.add_nuclide('Pb204', 1.40E-02, percent_type = 'ao')
+aluminio.add_nuclide('Pb206', 2.41E-01, percent_type = 'ao')
+aluminio.add_nuclide('Pb207', 2.21E-01, percent_type = 'ao')
+aluminio.add_nuclide('Pb208', 5.24E-01, percent_type = 'ao')
+aluminio.set_density('g/cm3', 1)
 
-aluminio = openmc.Material(name='Alúminio')
-aluminio.add_element('Al', 1)
-aluminio.set_density('g/cm3', 2.7)
+moderador = openmc.Material(temperature = 663)
+moderador.add_nuclide('B10', 1.442E-01, percent_type = 'wo')
+moderador.add_nuclide('B11', 6.384E-01, percent_type = 'wo')
+moderador.add_element('C',   2.174E-01, percent_type = 'wo')
+moderador.set_density('g/cm3', 2.25)
+
+combustivel = openmc.Material(temperature = 663)
+combustivel.add_nuclide('U235', 1.7400E-01, percent_type = 'wo')
+combustivel.add_nuclide('U238', 7.0720E-01, percent_type = 'wo')
+combustivel.add_nuclide('O16',  1.1871E-01, percent_type = 'wo')
+combustivel.add_nuclide('O17',  4.7950E-05, percent_type = 'wo')
+combustivel.volume = 2.69681E+05 #cm³
+combustivel.set_density('g/cm3', 1)
+
+ar = openmc.Material(temperature = 663)
+ar.add_nuclide('B10', 7.3914E-01, percent_type = 'wo')
+ar.add_nuclide('B11', 3.0798E-02, percent_type = 'wo')
+ar.add_element('C',   2.3006E-01, percent_type = 'wo')
+ar.set_density('g/cm3', 2.14)
 
 materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
 materiais.export_to_xml()
-
-
-
-
-
 
 ################################################
 ############ Definição da Geometria ############
@@ -123,46 +153,111 @@ materiais.export_to_xml()
 
 
 #Variáveis de Dimenções dos planos
-nivel_dagua = 1*2.54
-fundo_tanque = -(Vareta_combustivel_Comprimento - nivel_dagua)/2 #Fronteira de vácuo
-vareta_altura = fundo_tanque + Vareta_combustivel_Comprimento - nivel_dagua  #Fronteira de vácuo
-lateral_tanque_interna = Tanque_Diametro - Tanque_Espessura
+
+fundo_tanque_superior = 0
+vareta_altura = Vareta_combustivel_Comprimento
+nivel_dagua = vareta_altura - 6*2.54
+lateral_tanque_interna = Tanque_Diametro - (2*Tanque_Espessura)
 
 ##Planos internos a vareta
-refletor_interno = fundo_tanque + 6.5*2.54
-suporte_interno = refletor_interno + 0.2
-elemento_combustivel = suporte_interno + Barra_combustivel_Comprimento*5
+refletor_interno_superior = fundo_tanque_superior + 6.5*2.54
+suporte_interno_superior = refletor_interno_superior + 0.2
+elemento_combustivel = suporte_interno_superior + Barra_combustivel_Comprimento*5
 
 ##Planos internos a vareta central
 #refletor_interno_central = fundo_tanque + 5*2.54
 #suporte_interno_central = refletor_interno + 0.2
 
-
-
+clad_comb_1               = suporte_interno_superior + 0.5    #
+clad_comb_2               = clad_comb_1  + 20.45     # Fuel
+clad_comb_3               = clad_comb_2  + 0.5       
+clad_comb_4               = clad_comb_3  + 0.5       #
+clad_comb_5               = clad_comb_4  + 20.45     # Fuel
+clad_comb_6               = clad_comb_5  + 0.5  
+clad_comb_7               = clad_comb_6  + 0.5       #
+clad_comb_8               = clad_comb_7  + 20.45     # Fuel
+clad_comb_9               = clad_comb_8  + 0.5  
+clad_comb_10              = clad_comb_9  + 0.5       #
+clad_comb_11              = clad_comb_10 + 20.45     # Fuel
+clad_comb_12              = clad_comb_11 + 0.5  
+clad_comb_13              = clad_comb_12 + 0.5       #
+clad_comb_14              = clad_comb_13 + 20.45     # Fuel
+clad_comb_15              = clad_comb_14 + 0.5  
 
 #Criação das formas geométricas
-plano_fundo_tanque              = openmc.ZPlane(z0=fundo_tanque,boundary_type='vacuum')
-plano_refletor_interno          = openmc.ZPlane(z0=refletor_interno)
-plano_suporte_interno           = openmc.ZPlane(z0=suporte_interno)
+
+# Planos Horizontais
+plano_fundo_tanque              = openmc.ZPlane(z0=fundo_tanque_superior,)
+plano_refletor_interno          = openmc.ZPlane(z0=refletor_interno_superior)
+plano_suporte_interno           = openmc.ZPlane(z0=suporte_interno_superior)
 plano_elemento_combustivel      = openmc.ZPlane(z0=elemento_combustivel)
-plano_vareta_altura             = openmc.ZPlane(z0=vareta_altura,boundary_type='vacuum')
+plano_vareta_altura             = openmc.ZPlane(z0=vareta_altura)
+plano_refletor_lateral_superior = openmc.ZPlane(z0=nivel_dagua)                       
+
+# Especial divisões no combustível
+plano_clad_comb_1               = openmc.ZPlane(z0=clad_comb_1)      #
+plano_clad_comb_2               = openmc.ZPlane(z0=clad_comb_2 )     # Fuel
+plano_clad_comb_3               = openmc.ZPlane(z0=clad_comb_3 )     
+plano_clad_comb_4               = openmc.ZPlane(z0=clad_comb_4 )     #
+plano_clad_comb_5               = openmc.ZPlane(z0=clad_comb_5 )     # Fuel
+plano_clad_comb_6               = openmc.ZPlane(z0=clad_comb_6 )
+plano_clad_comb_7               = openmc.ZPlane(z0=clad_comb_7 )     #
+plano_clad_comb_8               = openmc.ZPlane(z0=clad_comb_8 )     # Fuel
+plano_clad_comb_9               = openmc.ZPlane(z0=clad_comb_9 )
+plano_clad_comb_10              = openmc.ZPlane(z0=clad_comb_10)     #
+plano_clad_comb_11              = openmc.ZPlane(z0=clad_comb_11)     # Fuel
+plano_clad_comb_12              = openmc.ZPlane(z0=clad_comb_12)
+plano_clad_comb_13              = openmc.ZPlane(z0=clad_comb_13)     #
+plano_clad_comb_14              = openmc.ZPlane(z0=clad_comb_14)     # Fuel
+plano_clad_comb_15              = openmc.ZPlane(z0=clad_comb_15)
+
+
 #plano_suporte_interno_central   = openmc.ZPlane(z0=suporte_interno_central)
 #plano_refletor_interno_central  = openmc.ZPlane(z0=refletor_interno_central)
-cilindro_raio_interno_elemento  = openmc.ZCylinder(r=Barra_combustivel_Diametro_interno/2)
-cilindro_raio_externo_elemento  = openmc.ZCylinder(r=Barra_combustivel_Diametro_externo/2)
+
+# Superfícies de cilindros
+
+# Combustivel
+cilindro_raio_interno_combustivel = openmc.ZCylinder(r=Barra_combustivel_Diametro_interno/2)
+cilindro_raio_externo_combustivel = openmc.ZCylinder(r=Barra_combustivel_Diametro_externo/2)
+clad_raio_interno_combustivel     = openmc.ZCylinder(r=clad_combustivel_diametro_interno/2)
+clad_raio_externo_combustivel     = openmc.ZCylinder(r=clad_combustivel_diametro_externo/2)
+
+# Radial fora do combustivel
 cilindro_raio_interno_vareta    = openmc.ZCylinder(r=Vareta_combustivel_Diametro_interno/2)
 cilindro_raio_externo_vareta    = openmc.ZCylinder(r=Vareta_combustivel_Diametro_interno/2+Vareta_combustivel_Espessura)
 cilindro_raio_interno_tanque    = openmc.ZCylinder(r=lateral_tanque_interna/2,boundary_type='vacuum')
 
 #Universo Vareta
-celula_moderador                = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_vareta_altura&+cilindro_raio_externo_vareta)
-celula_vareta                   = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
-celula_refletor_interno         = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_suporte_interno&-cilindro_raio_interno_vareta)
+celula_moderador                = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
+celula_refletor_interno         = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_refletor_interno&-cilindro_raio_interno_vareta)
+
+celula_clad_vareta              = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
 celula_suporte_interno          = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno&-plano_suporte_interno&-cilindro_raio_interno_vareta)
-celula_elemento_combustivel     = openmc.Cell(fill=combustivel, region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_interno_elemento&-cilindro_raio_externo_elemento)
-celula_ar_interno_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&-cilindro_raio_interno_elemento)
-celula_ar_externo_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_externo_elemento&-cilindro_raio_interno_vareta)
+celula_clad_combustivel_interno = openmc.Cell(fill=aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+clad_raio_interno_combustivel&-cilindro_raio_interno_combustivel)
+celula_clad_combustivel_externo = openmc.Cell(fill=aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_externo_combustivel&-clad_raio_externo_combustivel)
+celula_ar_interno_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&-clad_raio_interno_combustivel)
+celula_ar_externo_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&+clad_raio_externo_combustivel&-cilindro_raio_interno_vareta)
 celula_ar_superior_interno      = openmc.Cell(fill=ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
+celula_ar_externo_vareta        = openmc.Cell(fill=ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta)
+
+celula_combustivel_1 = openmc.Cell(fill=combustivel, region=+plano_clad_comb_1&-plano_clad_comb_2&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_combustivel_2 = openmc.Cell(fill=combustivel, region=+plano_clad_comb_4&-plano_clad_comb_5&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_combustivel_3 = openmc.Cell(fill=combustivel, region=+plano_clad_comb_7&-plano_clad_comb_8&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_combustivel_4 = openmc.Cell(fill=combustivel, region=+plano_clad_comb_10&-plano_clad_comb_11&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_combustivel_5 = openmc.Cell(fill=combustivel, region=+plano_clad_comb_13&-plano_clad_comb_14&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+
+celula_clad_bottom = openmc.Cell(fill=aluminio, region=+plano_suporte_interno&-plano_clad_comb_1&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_1      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_1&-plano_clad_comb_2&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_2      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_2&-plano_clad_comb_3&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_3      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_3&-plano_clad_comb_4&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_4      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_5&-plano_clad_comb_6&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_5      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_6&-plano_clad_comb_7&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_6      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_8&-plano_clad_comb_9&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_7      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_9&-plano_clad_comb_10&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_8      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_11&-plano_clad_comb_12&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_9      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_12&-plano_clad_comb_13&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+celula_clad_10     = openmc.Cell(fill=aluminio, region=+plano_clad_comb_14&-plano_clad_comb_15&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
 
 #Celulas específicas para o Universo Vareta Central (fonte)
 #celula_refletor_fonte           = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_refletor_interno_central&-cilindro_raio_interno_vareta)
@@ -170,19 +265,21 @@ celula_ar_superior_interno      = openmc.Cell(fill=ar,          region=+plano_el
 #celula_moderador_interno_fonte  = openmc.Cell(fill=moderador,   region=+plano_suporte_interno_central&-plano_vareta_altura&-cilindro_raio_interno_vareta)
 
 #Celula para universo apenas com refletor
-celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque&-plano_vareta_altura)
-
-
-
+celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque&-plano_refletor_lateral_superior)
+celula_ar_externo               = openmc.Cell(fill=ar,        region=+plano_refletor_lateral_superior&-plano_vareta_altura)
 
 #Universos
-universo_vareta_combustível     = openmc.Universe(cells=(celula_vareta,celula_refletor_interno, celula_suporte_interno, celula_ar_interno_elemento, \
-                                                         celula_elemento_combustivel,celula_ar_externo_elemento, celula_moderador, celula_ar_superior_interno,))
+universo_vareta_combustível     = openmc.Universe(cells=(celula_clad_vareta,celula_refletor_interno, celula_suporte_interno, celula_ar_interno_elemento,
+                                                         celula_combustivel_1,celula_combustivel_2, celula_combustivel_3, celula_combustivel_4,
+                                                         celula_combustivel_5,celula_ar_externo_elemento, celula_moderador, celula_ar_superior_interno,
+                                                         celula_clad_combustivel_interno,celula_clad_combustivel_externo,
+                                                         celula_clad_1, celula_clad_2,celula_clad_3,celula_clad_4,celula_clad_5,celula_clad_6,celula_clad_7,
+                                                         celula_clad_8,celula_clad_9,celula_clad_10,celula_clad_bottom,celula_ar_externo_vareta))
 
 #universo_vareta_central         = openmc.Universe(cells=(celula_vareta,celula_refletor_fonte,celula_suporte_interno_fonte, \
 #                                                         celula_moderador_interno_fonte, celula_moderador))
 
-universo_refletor               = openmc.Universe(cells=(celula_refletor,))
+universo_refletor               = openmc.Universe(cells=(celula_refletor,celula_ar_externo,))
 
 
 
@@ -240,19 +337,23 @@ geometria.export_to_xml()
 
 secao_transversal = openmc.Plot.from_geometry(geometria)
 secao_transversal.type = 'slice'
+secao_transversal.basis = 'xz'
+secao_transversal.width = [200,200]
+secao_transversal.origin = (0,0,vareta_altura/2)
 secao_transversal.filename = 'plot_secao_transversal'
-secao_transversal.pixels = [5000,5000]
+secao_transversal.pixels = [10000,10000]
 secao_transversal.color_by = 'material'
 secao_transversal.colors = colors = {
     moderador: 'blue',
-    combustivel: 'olive',
-    ar: 'white'
+    combustivel: 'yellow',
+    ar: 'pink',
+    aluminio: 'black'
 }
 #secao_transversal.to_ipython_image()
 
 ############ Plotar em 3D
 
-plotar3d = input("Plortar em 3D? [S/n]")
+plotar3d = "n"#input("Plortar em 3D? [S/n]")
 if (plotar3d!="n"):
     plot_3d = openmc.Plot.from_geometry(geometria)
     plot_3d.type = 'voxel'
@@ -262,7 +363,8 @@ if (plotar3d!="n"):
     plot_3d.colors = colors = {
         combustivel: 'olive',
         moderador: 'blue',
-        ar: 'white'
+        ar: 'white',
+        aluminio: 'green'
     }
     plot_3d.width = (15., 15., 15.)
     ############ Exportar Plots e Plotar
@@ -305,12 +407,12 @@ settings.export_to_xml()
 ################################################
 ############ Definição dos Tallies  ############
 ################################################
-fuel_tally = openmc.Tally()
-fuel_tally.filters = [openmc.DistribcellFilter(celula_elemento_combustivel)]
-fuel_tally.scores = ['flux']
-
-tallies = openmc.Tallies([fuel_tally])
-tallies.export_to_xml()
+#fuel_tally = openmc.Tally()
+#fuel_tally.filters = [openmc.DistribcellFilter(celula_elemento_combustivel)]
+#fuel_tally.scores = ['flux']
+#
+#tallies = openmc.Tallies([fuel_tally])
+#tallies.export_to_xml()
 
 
 
@@ -321,4 +423,4 @@ tallies.export_to_xml()
 ################################################
 ############ Executando Código      ############
 ################################################
-openmc.run()
+#openmc.run()
