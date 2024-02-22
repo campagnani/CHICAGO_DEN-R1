@@ -97,54 +97,25 @@ Grade_Posicionamento = 28.4        #Segunda: 28,4 cm do fundo do tanque.
 ############ Definição dos Materiais ###########
 ################################################
 
-#combustivel = openmc.Material(name='Uránio Metálico')
-#combustivel.add_element('U', 1, enrichment=0.711)
-#combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
-#
-#moderador = openmc.Material(name='Água Leve')
-#moderador.add_element('H', 2)
-#moderador.add_element('O', 1)
-#moderador.set_density('g/cm3', 1.0)
-# 
-#ar = openmc.Material(name='Ar')
-#ar.add_element('O', 1)
-#ar.set_density('g/cm3', 0.001225)
-#
-#aluminio = openmc.Material(name='Alúminio')
-#aluminio.add_element('Al', 1)
-#aluminio.set_density('g/cm3', 2.7)
-#
-#materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
-#materiais.export_to_xml()
+combustivel = openmc.Material(name='Uránio Metálico')
+combustivel.add_element('U', 1, enrichment=0.711)
+combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
 
-aluminio = openmc.Material(temperature = 750)
-aluminio.add_nuclide('Pb204', 1.40E-02, percent_type = 'ao')
-aluminio.add_nuclide('Pb206', 2.41E-01, percent_type = 'ao')
-aluminio.add_nuclide('Pb207', 2.21E-01, percent_type = 'ao')
-aluminio.add_nuclide('Pb208', 5.24E-01, percent_type = 'ao')
-aluminio.set_density('g/cm3', 1)
+moderador = openmc.Material(name='Água Leve')
+moderador.add_nuclide('H1', 2)
+moderador.add_nuclide('O16', 1)
+moderador.set_density('g/cm3', 1.0)
+ 
+ar = openmc.Material(name='Ar')
+ar.add_nuclide('O16', 1)
+ar.set_density('g/cm3', 0.001225)
 
-moderador = openmc.Material(temperature = 663)
-moderador.add_nuclide('B10', 1.442E-01, percent_type = 'wo')
-moderador.add_nuclide('B11', 6.384E-01, percent_type = 'wo')
-moderador.add_element('C',   2.174E-01, percent_type = 'wo')
-moderador.set_density('g/cm3', 2.25)
-
-combustivel = openmc.Material(temperature = 663)
-combustivel.add_nuclide('U235', 1.7400E-01, percent_type = 'wo')
-combustivel.add_nuclide('U238', 7.0720E-01, percent_type = 'wo')
-combustivel.add_nuclide('O16',  1.1871E-01, percent_type = 'wo')
-combustivel.add_nuclide('O17',  4.7950E-05, percent_type = 'wo')
-combustivel.volume = 2.69681E+05 #cm³
-combustivel.set_density('g/cm3', 1)
-
-ar = openmc.Material(temperature = 663)
-ar.add_nuclide('B10', 7.3914E-01, percent_type = 'wo')
-ar.add_nuclide('B11', 3.0798E-02, percent_type = 'wo')
-ar.add_element('C',   2.3006E-01, percent_type = 'wo')
-ar.set_density('g/cm3', 2.14)
+aluminio = openmc.Material(name='Alúminio')
+aluminio.add_element('Al', 1)
+aluminio.set_density('g/cm3', 2.7)
 
 materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
+materiais.cross_sections = "/opt/nuclear-data2/endfb-vii.1-hdf5/cross_sections.xml"
 materiais.export_to_xml()
 
 ################################################
@@ -329,9 +300,9 @@ celula_ar_interna_tanque = openmc.Cell(fill=ar, region=-cilindro_raio_interno_ta
 
 # Boundary conditions
 fronteira = 10
-cilindro_boundary        = openmc.ZCylinder (r=Tanque_Diametro/2 + fronteira)
-plano_superior_boundary  = openmc.ZPlane    (z0=altura_tanque + fronteira)
-plano_inferior_boundary  = openmc.ZPlane    (z0=fundo_tanque_inferior - fronteira)
+cilindro_boundary        = openmc.ZCylinder (r=Tanque_Diametro/2 + fronteira, boundary_type='vacuum')
+plano_superior_boundary  = openmc.ZPlane    (z0=altura_tanque + fronteira, boundary_type='vacuum')
+plano_inferior_boundary  = openmc.ZPlane    (z0=fundo_tanque_inferior - fronteira, boundary_type='vacuum')
 
 celula_ar_externa_tanque = openmc.Cell(fill=ar, region=-cilindro_boundary&-plano_superior_boundary&+plano_altura_tanque
                                                      | -cilindro_boundary&+cilindro_raio_externo_tanque&-plano_altura_tanque&+plano_fundo_tanque_inferior
@@ -442,4 +413,4 @@ settings.export_to_xml()
 ################################################
 ############ Executando Código      ############
 ################################################
-#openmc.run()
+openmc.run()
