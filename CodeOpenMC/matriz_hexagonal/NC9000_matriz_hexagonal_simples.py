@@ -97,25 +97,72 @@ Grade_Posicionamento = 28.4        #Segunda: 28,4 cm do fundo do tanque.
 ############ Definição dos Materiais ###########
 ################################################
 
-combustivel = openmc.Material(name='Uránio Metálico')
-combustivel.add_element('U', 1, enrichment=0.711)
-combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
+#combustivel = openmc.Material(name='Uránio Metálico')
+#combustivel.add_nuclide('U234', 5.50000E-05, percent_type='ao')
+#combustivel.add_nuclide('U235', 7.20000E-03, percent_type='ao')
+#combustivel.add_nuclide('U238', 9.92745E-01, percent_type='ao')
+#combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
+#
+#moderador = openmc.Material(name='Água Leve')
+#moderador.add_nuclide('H1', 2)
+#moderador.add_nuclide('O16', 1)
+#moderador.set_density('g/cm3', 1.0)
+# 
+#ar = openmc.Material(name='Ar')
+#ar.add_nuclide('O16', 1)
+#ar.set_density('g/cm3', 0.001225)
+#
+#aluminio = openmc.Material(name='Alúminio')
+#aluminio.add_element('Al', 1)
+#aluminio.set_density('g/cm3', 2.7)
+#
+#materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
+#materiais.cross_sections = "/opt/nuclear-data2/endfb-vii.1-hdf5/cross_sections.xml"
+#materiais.export_to_xml()
 
-moderador = openmc.Material(name='Água Leve')
-moderador.add_nuclide('H1', 2)
-moderador.add_nuclide('O16', 1)
-moderador.set_density('g/cm3', 1.0)
- 
-ar = openmc.Material(name='Ar')
-ar.add_nuclide('O16', 1)
-ar.set_density('g/cm3', 0.001225)
+combustivel = openmc.Material(temperature = 663)
+combustivel.add_nuclide('Pb204', 1.40E-02, percent_type = 'ao')
+combustivel.add_nuclide('Pb206', 2.41E-01, percent_type = 'ao')
+combustivel.add_nuclide('Pb207', 2.21E-01, percent_type = 'ao')
+combustivel.add_nuclide('Pb208', 5.24E-01, percent_type = 'ao')
+combustivel.set_density('g/cm3', 1.0)
 
-aluminio = openmc.Material(name='Alúminio')
-aluminio.add_element('Al', 1)
-aluminio.set_density('g/cm3', 2.7)
+ar = openmc.Material(temperature = 663)
+ar.add_nuclide('B10', 1.442E-01, percent_type = 'wo')
+ar.add_nuclide('B11', 6.384E-01, percent_type = 'wo')
+ar.add_nuclide('C12', 2.148E-01, percent_type = 'wo')
+ar.add_nuclide('C13', 2.612E-03, percent_type = 'wo')
+ar.set_density('g/cm3', 2.25)
+
+moderador = openmc.Material(temperature = 663)
+moderador.add_nuclide('B10',   6.4233E-01, percent_type = 'ao')
+moderador.add_nuclide('B11',   2.4341E-02, percent_type = 'ao')
+moderador.add_nuclide('W182',  4.2397E-02, percent_type = 'ao')
+moderador.add_nuclide('W183',  2.2902E-02, percent_type = 'ao')
+moderador.add_nuclide('W184',  4.9027E-02, percent_type = 'ao')
+moderador.add_nuclide('W186',  4.5482E-02, percent_type = 'ao')
+moderador.add_nuclide('Re185', 6.4827E-02, percent_type = 'ao')
+moderador.add_nuclide('Re187', 1.0851E-01, percent_type = 'ao')
+moderador.set_density('g/cm3', 11.7)
+
+aluminio = openmc.Material(temperature = 663)
+aluminio.add_nuclide('C12',  2.9639E-04, percent_type = 'wo')
+aluminio.add_nuclide('C13',  3.6051E-06, percent_type = 'wo')
+aluminio.add_nuclide('Al27', 4.0000E-02, percent_type = 'wo')
+aluminio.add_nuclide('Si28', 6.4311E-04, percent_type = 'wo')
+aluminio.add_nuclide('Si29', 3.3727E-05, percent_type = 'wo')
+aluminio.add_nuclide('Si30', 2.3159E-05, percent_type = 'wo')
+aluminio.add_nuclide('Cr50', 1.9956E-03, percent_type = 'wo')
+aluminio.add_nuclide('Cr52', 4.0020E-02, percent_type = 'wo')
+aluminio.add_nuclide('Cr53', 4.6254E-02, percent_type = 'wo')
+aluminio.add_nuclide('Cr54', 1.1731E-02, percent_type = 'wo')
+aluminio.add_nuclide('Fe54', 4.7251E-02, percent_type = 'wo')
+aluminio.add_nuclide('Fe56', 7.6918E-01, percent_type = 'wo')
+aluminio.add_nuclide('Fe57', 1.8081E-02, percent_type = 'wo')
+aluminio.add_nuclide('Fe58', 2.4485E-02, percent_type = 'wo')
+aluminio.set_density('g/cm3', 7.3)
 
 materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
-materiais.cross_sections = "/opt/nuclear-data2/endfb-vii.1-hdf5/cross_sections.xml"
 materiais.export_to_xml()
 
 ################################################
@@ -159,6 +206,10 @@ clad_comb_15              = clad_comb_14 + 0.5
 #Criação das formas geométricas
 
 # Planos Horizontais
+plano_grade_superior_1          = openmc.ZPlane(z0=Grade_Posicionamento-fundo_tanque_superior,)
+plano_grade_superior_2          = openmc.ZPlane(z0=Grade_Posicionamento,)
+plano_grade_inferior_1          = openmc.ZPlane(z0=fundo_tanque_superior + 1.0,)
+plano_grade_inferior_2          = openmc.ZPlane(z0=fundo_tanque_superior + 2.0,)
 plano_altura_tanque             = openmc.ZPlane(z0=altura_tanque,)
 plano_fundo_tanque_superior     = openmc.ZPlane(z0=fundo_tanque_superior,)
 plano_fundo_tanque_inferior     = openmc.ZPlane(z0=fundo_tanque_inferior,)
@@ -205,13 +256,18 @@ cilindro_raio_externo_tanque    = openmc.ZCylinder(r=Tanque_Diametro/2)
 
 
 #Universo Vareta
-celula_moderador                = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
+celula_moderador1               = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
+celula_moderador2               = openmc.Cell(fill=moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
+celula_moderador3               = openmc.Cell(fill=moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
 celula_refletor_interno         = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_interno&-cilindro_raio_interno_vareta)
 
+celula_grade_inferior           = openmc.Cell(fill=aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
+celula_grade_superior           = openmc.Cell(fill=aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
 celula_clad_vareta              = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
 celula_suporte_interno          = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno&-plano_suporte_interno&-cilindro_raio_interno_vareta)
 celula_clad_combustivel_interno = openmc.Cell(fill=aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+clad_raio_interno_combustivel&-cilindro_raio_interno_combustivel)
 celula_clad_combustivel_externo = openmc.Cell(fill=aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_externo_combustivel&-clad_raio_externo_combustivel)
+
 celula_ar_interno_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&-clad_raio_interno_combustivel)
 celula_ar_externo_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&+clad_raio_externo_combustivel&-cilindro_raio_interno_vareta)
 celula_ar_superior_interno      = openmc.Cell(fill=ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
@@ -241,21 +297,27 @@ celula_clad_10     = openmc.Cell(fill=aluminio, region=+plano_clad_comb_14&-plan
 #celula_moderador_interno_fonte  = openmc.Cell(fill=moderador,   region=+plano_suporte_interno_central&-plano_vareta_altura&-cilindro_raio_interno_vareta)
 
 #Celula para universo apenas com refletor
-celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior)
+celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque_superior&-plano_grade_inferior_1
+                                                                   | +plano_grade_inferior_2&-plano_grade_superior_1
+                                                                   | +plano_grade_superior_2&-plano_refletor_lateral_superior)
+celula_grade_externa_inferior   = openmc.Cell(fill=aluminio,  region=+plano_grade_inferior_1&-plano_grade_inferior_2)
+celula_grade_externa_superior   = openmc.Cell(fill=aluminio,  region=+plano_grade_superior_1&-plano_grade_superior_2)
 celula_ar_externo               = openmc.Cell(fill=ar,        region=+plano_refletor_lateral_superior&-plano_vareta_altura)
 
 #Universos
 universo_vareta_combustível     = openmc.Universe(cells=(celula_clad_vareta,celula_refletor_interno, celula_suporte_interno, celula_ar_interno_elemento,
                                                          celula_combustivel_1,celula_combustivel_2, celula_combustivel_3, celula_combustivel_4,
-                                                         celula_combustivel_5,celula_ar_externo_elemento, celula_moderador, celula_ar_superior_interno,
-                                                         celula_clad_combustivel_interno,celula_clad_combustivel_externo,
+                                                         celula_combustivel_5,celula_ar_externo_elemento, celula_moderador1, celula_moderador2, celula_moderador3, 
+                                                         celula_ar_superior_interno, celula_clad_combustivel_interno,celula_clad_combustivel_externo,
                                                          celula_clad_1, celula_clad_2,celula_clad_3,celula_clad_4,celula_clad_5,celula_clad_6,celula_clad_7,
-                                                         celula_clad_8,celula_clad_9,celula_clad_10,celula_clad_bottom,celula_ar_externo_vareta))
+                                                         celula_clad_8,celula_clad_9,celula_clad_10,celula_clad_bottom,celula_ar_externo_vareta,
+                                                         celula_grade_superior, celula_grade_inferior))
 
 #universo_vareta_central         = openmc.Universe(cells=(celula_vareta,celula_refletor_fonte,celula_suporte_interno_fonte, \
 #                                                         celula_moderador_interno_fonte, celula_moderador))
 
-universo_agua_ar               = openmc.Universe(cells=(celula_refletor,celula_ar_externo,))
+universo_agua_ar               = openmc.Universe(cells=(celula_refletor,celula_ar_externo,celula_grade_externa_inferior,
+                                                        celula_grade_externa_superior))
 
 #Criação da Matriz Hexagonal
 
@@ -413,4 +475,4 @@ settings.export_to_xml()
 ################################################
 ############ Executando Código      ############
 ################################################
-openmc.run()
+#openmc.run()
