@@ -97,72 +97,37 @@ Grade_Posicionamento = 28.4        #Segunda: 28,4 cm do fundo do tanque.
 ############ Definição dos Materiais ###########
 ################################################
 
-#combustivel = openmc.Material(name='Uránio Metálico')
-#combustivel.add_nuclide('U234', 5.50000E-05, percent_type='ao')
-#combustivel.add_nuclide('U235', 7.20000E-03, percent_type='ao')
-#combustivel.add_nuclide('U238', 9.92745E-01, percent_type='ao')
-#combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
-#
-#moderador = openmc.Material(name='Água Leve')
-#moderador.add_nuclide('H1', 2)
-#moderador.add_nuclide('O16', 1)
-#moderador.set_density('g/cm3', 1.0)
-# 
-#ar = openmc.Material(name='Ar')
-#ar.add_nuclide('O16', 1)
-#ar.set_density('g/cm3', 0.001225)
-#
-#aluminio = openmc.Material(name='Alúminio')
-#aluminio.add_element('Al', 1)
-#aluminio.set_density('g/cm3', 2.7)
-#
-#materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
-#materiais.cross_sections = "/opt/nuclear-data2/endfb-vii.1-hdf5/cross_sections.xml"
-#materiais.export_to_xml()
+combustivel = openmc.Material(name='Uránio Metálico')
+combustivel.add_nuclide('U234', 5.50000E-05, percent_type='ao')
+combustivel.add_nuclide('U235', 7.20000E-03, percent_type='ao')
+combustivel.add_nuclide('U238', 9.92745E-01, percent_type='ao')
+combustivel.set_density('g/cm3', Barra_combustivel_Densidade)
 
-combustivel = openmc.Material(temperature = 663)
-combustivel.add_nuclide('Pb204', 1.40E-02, percent_type = 'ao')
-combustivel.add_nuclide('Pb206', 2.41E-01, percent_type = 'ao')
-combustivel.add_nuclide('Pb207', 2.21E-01, percent_type = 'ao')
-combustivel.add_nuclide('Pb208', 5.24E-01, percent_type = 'ao')
-combustivel.set_density('g/cm3', 1.0)
+moderador = openmc.Material(name='Água Leve')
+moderador.add_nuclide('H1' , 1.1187E-01 , percent_type='wo')
+moderador.add_nuclide('H2' , 3.3540E-05 , percent_type='wo')
+moderador.add_nuclide('O16', 8.8574E-01 , percent_type='wo')
+moderador.add_nuclide('O17', 3.5857E-04 , percent_type='wo')
+moderador.add_nuclide('O18', 1.9982E-03 , percent_type='wo')
+moderador.set_density('g/cm3', 1.0)
+ 
+ar = openmc.Material(name='Ar')
+ar.add_nuclide('N14' , 7.7826E-01 , percent_type='ao')
+ar.add_nuclide('N15' , 2.8589E-03 , percent_type='ao')
+ar.add_nuclide('O16' , 1.0794E-01 , percent_type='ao')
+ar.add_nuclide('O17' , 1.0156E-01 , percent_type='ao')
+ar.add_nuclide('O18' , 3.8829E-05 , percent_type='ao')
+ar.add_nuclide('Ar36', 2.6789E-03 , percent_type='ao')
+ar.add_nuclide('Ar38', 3.4177E-03 , percent_type='ao')
+ar.add_nuclide('Ar40', 3.2467E-03 , percent_type='ao')
+ar.set_density('g/cm3', 0.001225)
 
-ar = openmc.Material(temperature = 663)
-ar.add_nuclide('B10', 1.442E-01, percent_type = 'wo')
-ar.add_nuclide('B11', 6.384E-01, percent_type = 'wo')
-ar.add_nuclide('C12', 2.148E-01, percent_type = 'wo')
-ar.add_nuclide('C13', 2.612E-03, percent_type = 'wo')
-ar.set_density('g/cm3', 2.25)
-
-moderador = openmc.Material(temperature = 663)
-moderador.add_nuclide('B10',   6.4233E-01, percent_type = 'ao')
-moderador.add_nuclide('B11',   2.4341E-02, percent_type = 'ao')
-moderador.add_nuclide('W182',  4.2397E-02, percent_type = 'ao')
-moderador.add_nuclide('W183',  2.2902E-02, percent_type = 'ao')
-moderador.add_nuclide('W184',  4.9027E-02, percent_type = 'ao')
-moderador.add_nuclide('W186',  4.5482E-02, percent_type = 'ao')
-moderador.add_nuclide('Re185', 6.4827E-02, percent_type = 'ao')
-moderador.add_nuclide('Re187', 1.0851E-01, percent_type = 'ao')
-moderador.set_density('g/cm3', 11.7)
-
-aluminio = openmc.Material(temperature = 663)
-aluminio.add_nuclide('C12',  2.9639E-04, percent_type = 'wo')
-aluminio.add_nuclide('C13',  3.6051E-06, percent_type = 'wo')
-aluminio.add_nuclide('Al27', 4.0000E-02, percent_type = 'wo')
-aluminio.add_nuclide('Si28', 6.4311E-04, percent_type = 'wo')
-aluminio.add_nuclide('Si29', 3.3727E-05, percent_type = 'wo')
-aluminio.add_nuclide('Si30', 2.3159E-05, percent_type = 'wo')
-aluminio.add_nuclide('Cr50', 1.9956E-03, percent_type = 'wo')
-aluminio.add_nuclide('Cr52', 4.0020E-02, percent_type = 'wo')
-aluminio.add_nuclide('Cr53', 4.6254E-02, percent_type = 'wo')
-aluminio.add_nuclide('Cr54', 1.1731E-02, percent_type = 'wo')
-aluminio.add_nuclide('Fe54', 4.7251E-02, percent_type = 'wo')
-aluminio.add_nuclide('Fe56', 7.6918E-01, percent_type = 'wo')
-aluminio.add_nuclide('Fe57', 1.8081E-02, percent_type = 'wo')
-aluminio.add_nuclide('Fe58', 2.4485E-02, percent_type = 'wo')
-aluminio.set_density('g/cm3', 7.3)
+aluminio = openmc.Material(name='Alúminio')
+aluminio.add_nuclide('Al27', 1 , percent_type ='wo')
+aluminio.set_density('g/cm3', 2.7)
 
 materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
+materiais.cross_sections = "/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/cross_sections.xml"
 materiais.export_to_xml()
 
 ################################################
@@ -442,9 +407,9 @@ else:
 ############ Definição da Simulação ############
 ################################################
 settings = openmc.Settings()
-settings.particles = 10000
-settings.batches = 110
-settings.inactive = 10
+settings.particles = 100000
+settings.batches = 400
+settings.inactive = 40
 settings.source = openmc.Source(space=openmc.stats.Point())
 settings.export_to_xml()
 
@@ -475,4 +440,4 @@ settings.export_to_xml()
 ################################################
 ############ Executando Código      ############
 ################################################
-#openmc.run()
+openmc.run()
