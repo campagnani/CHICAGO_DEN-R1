@@ -153,11 +153,12 @@ materiais.export_to_xml()
 
 
 #Variáveis de Dimenções dos planos
-
-fundo_tanque_superior = 0
+fundo_tanque_inferior = 0
+fundo_tanque_superior = fundo_tanque_inferior + Tanque_Espessura
 vareta_altura = Vareta_combustivel_Comprimento
 nivel_dagua = vareta_altura - 6*2.54
 lateral_tanque_interna = Tanque_Diametro - (2*Tanque_Espessura)
+altura_tanque          = fundo_tanque_inferior + Tanque_Altura
 
 ##Planos internos a vareta
 refletor_interno_superior = fundo_tanque_superior + 6.5*2.54
@@ -187,7 +188,9 @@ clad_comb_15              = clad_comb_14 + 0.5
 #Criação das formas geométricas
 
 # Planos Horizontais
-plano_fundo_tanque              = openmc.ZPlane(z0=fundo_tanque_superior,)
+plano_altura_tanque             = openmc.ZPlane(z0=altura_tanque,)
+plano_fundo_tanque_superior     = openmc.ZPlane(z0=fundo_tanque_superior,)
+plano_fundo_tanque_inferior     = openmc.ZPlane(z0=fundo_tanque_inferior,)
 plano_refletor_interno          = openmc.ZPlane(z0=refletor_interno_superior)
 plano_suporte_interno           = openmc.ZPlane(z0=suporte_interno_superior)
 plano_elemento_combustivel      = openmc.ZPlane(z0=elemento_combustivel)
@@ -226,13 +229,15 @@ clad_raio_externo_combustivel     = openmc.ZCylinder(r=clad_combustivel_diametro
 # Radial fora do combustivel
 cilindro_raio_interno_vareta    = openmc.ZCylinder(r=Vareta_combustivel_Diametro_interno/2)
 cilindro_raio_externo_vareta    = openmc.ZCylinder(r=Vareta_combustivel_Diametro_interno/2+Vareta_combustivel_Espessura)
-cilindro_raio_interno_tanque    = openmc.ZCylinder(r=lateral_tanque_interna/2,boundary_type='vacuum')
+cilindro_raio_interno_tanque    = openmc.ZCylinder(r=lateral_tanque_interna/2)
+cilindro_raio_externo_tanque    = openmc.ZCylinder(r=Tanque_Diametro/2)
+
 
 #Universo Vareta
-celula_moderador                = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
-celula_refletor_interno         = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_refletor_interno&-cilindro_raio_interno_vareta)
+celula_moderador                = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
+celula_refletor_interno         = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_interno&-cilindro_raio_interno_vareta)
 
-celula_clad_vareta              = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
+celula_clad_vareta              = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
 celula_suporte_interno          = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno&-plano_suporte_interno&-cilindro_raio_interno_vareta)
 celula_clad_combustivel_interno = openmc.Cell(fill=aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+clad_raio_interno_combustivel&-cilindro_raio_interno_combustivel)
 celula_clad_combustivel_externo = openmc.Cell(fill=aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_externo_combustivel&-clad_raio_externo_combustivel)
@@ -260,12 +265,12 @@ celula_clad_9      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_12&-plan
 celula_clad_10     = openmc.Cell(fill=aluminio, region=+plano_clad_comb_14&-plano_clad_comb_15&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
 
 #Celulas específicas para o Universo Vareta Central (fonte)
-#celula_refletor_fonte           = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque&-plano_refletor_interno_central&-cilindro_raio_interno_vareta)
+#celula_refletor_fonte           = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_interno_central&-cilindro_raio_interno_vareta)
 #celula_suporte_interno_fonte    = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno_central&-plano_suporte_interno_central&-cilindro_raio_interno_vareta)
 #celula_moderador_interno_fonte  = openmc.Cell(fill=moderador,   region=+plano_suporte_interno_central&-plano_vareta_altura&-cilindro_raio_interno_vareta)
 
 #Celula para universo apenas com refletor
-celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque&-plano_refletor_lateral_superior)
+celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior)
 celula_ar_externo               = openmc.Cell(fill=ar,        region=+plano_refletor_lateral_superior&-plano_vareta_altura)
 
 #Universos
@@ -279,27 +284,25 @@ universo_vareta_combustível     = openmc.Universe(cells=(celula_clad_vareta,cel
 #universo_vareta_central         = openmc.Universe(cells=(celula_vareta,celula_refletor_fonte,celula_suporte_interno_fonte, \
 #                                                         celula_moderador_interno_fonte, celula_moderador))
 
-universo_refletor               = openmc.Universe(cells=(celula_refletor,celula_ar_externo,))
-
-
+universo_agua_ar               = openmc.Universe(cells=(celula_refletor,celula_ar_externo,))
 
 #Criação da Matriz Hexagonal
 
 matriz_hexagonal = openmc.HexLattice()
 matriz_hexagonal.center = (0., 0.)
 matriz_hexagonal.pitch = (2*2.54,)
-matriz_hexagonal.outer = universo_refletor
+matriz_hexagonal.outer = universo_agua_ar
 matriz_hexagonal.orientation = 'x'
 
 #print(matriz_hexagonal.show_indices(num_rings=13))
 
-anel_misturado_10 = [universo_refletor]*4 + [universo_vareta_combustível] + [universo_refletor] + [universo_vareta_combustível] + \
-                    [universo_refletor]*7 + [universo_vareta_combustível] + [universo_refletor] + [universo_vareta_combustível] + \
-                    [universo_refletor]*7 + [universo_vareta_combustível] + [universo_refletor] + [universo_vareta_combustível] + \
-                    [universo_refletor]*7 + [universo_vareta_combustível] + [universo_refletor] + [universo_vareta_combustível] + \
-                    [universo_refletor]*7 + [universo_vareta_combustível] + [universo_refletor] + [universo_vareta_combustível] + \
-                    [universo_refletor]*7 + [universo_vareta_combustível] + [universo_refletor] + [universo_vareta_combustível] + \
-                    [universo_refletor]*3
+anel_misturado_10 = [universo_agua_ar]*4 + [universo_vareta_combustível] + [universo_agua_ar] + [universo_vareta_combustível] + \
+                    [universo_agua_ar]*7 + [universo_vareta_combustível] + [universo_agua_ar] + [universo_vareta_combustível] + \
+                    [universo_agua_ar]*7 + [universo_vareta_combustível] + [universo_agua_ar] + [universo_vareta_combustível] + \
+                    [universo_agua_ar]*7 + [universo_vareta_combustível] + [universo_agua_ar] + [universo_vareta_combustível] + \
+                    [universo_agua_ar]*7 + [universo_vareta_combustível] + [universo_agua_ar] + [universo_vareta_combustível] + \
+                    [universo_agua_ar]*7 + [universo_vareta_combustível] + [universo_agua_ar] + [universo_vareta_combustível] + \
+                    [universo_agua_ar]*3
 anel_comb_mod_9  = [universo_vareta_combustível]*54
 anel_comb_mod_8  = [universo_vareta_combustível]*48
 anel_comb_mod_7  = [universo_vareta_combustível]*42
@@ -314,19 +317,35 @@ anel_font_mod_0  = [universo_vareta_combustível]#[universo_vareta_central]
 matriz_hexagonal.universes = [anel_misturado_10, anel_comb_mod_9, anel_comb_mod_8, anel_comb_mod_7, anel_comb_mod_6, anel_comb_mod_5, anel_comb_mod_4, anel_comb_mod_3, anel_comb_mod_2, anel_comb_mod_1, anel_font_mod_0]
 print(matriz_hexagonal)
 #A celula do reator é preenchida com a matriz_hexagonal e depois água, até chegar na superficie lateral do refletor
-celula_reator_matriz_hexagonal  = openmc.Cell(fill=matriz_hexagonal, region=-cilindro_raio_interno_tanque)
+celula_reator_matriz_hexagonal  = openmc.Cell(fill=matriz_hexagonal, region=-cilindro_raio_interno_tanque&-plano_vareta_altura&+plano_fundo_tanque_superior)
+
+## Celulas externas a matriz hexagonal
+
+#Tanque
+celula_tanque = openmc.Cell(fill=aluminio, region=+cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_fundo_tanque_superior&-plano_altura_tanque
+                                                        | +plano_fundo_tanque_inferior&-plano_fundo_tanque_superior&-cilindro_raio_externo_tanque)
+
+celula_ar_interna_tanque = openmc.Cell(fill=ar, region=-cilindro_raio_interno_tanque&+plano_vareta_altura&-plano_altura_tanque)
+
+# Boundary conditions
+fronteira = 10
+cilindro_boundary        = openmc.ZCylinder (r=Tanque_Diametro/2 + fronteira)
+plano_superior_boundary  = openmc.ZPlane    (z0=altura_tanque + fronteira)
+plano_inferior_boundary  = openmc.ZPlane    (z0=fundo_tanque_inferior - fronteira)
+
+celula_ar_externa_tanque = openmc.Cell(fill=ar, region=-cilindro_boundary&-plano_superior_boundary&+plano_altura_tanque
+                                                     | -cilindro_boundary&+cilindro_raio_externo_tanque&-plano_altura_tanque&+plano_fundo_tanque_inferior
+                                                     | -cilindro_boundary&-plano_fundo_tanque_inferior&+plano_inferior_boundary)
+
+# Universo outer
+outer_universe = openmc.Universe(cells=(celula_reator_matriz_hexagonal,celula_tanque,celula_ar_externa_tanque,celula_ar_interna_tanque))
+# Célula outer
+celula_outer = openmc.Cell(fill=outer_universe, region=-cilindro_boundary&+plano_inferior_boundary&-plano_superior_boundary)
 
 ############ Exportar Geometrias
 
-geometria = openmc.Geometry([celula_reator_matriz_hexagonal])
+geometria = openmc.Geometry([celula_outer])
 geometria.export_to_xml()
-
-
-
-
-
-
-
 
 
 ################################################
