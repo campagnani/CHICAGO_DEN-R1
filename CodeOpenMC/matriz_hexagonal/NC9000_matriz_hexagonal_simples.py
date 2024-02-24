@@ -127,7 +127,7 @@ aluminio.add_nuclide('Al27', 1 , percent_type ='wo')
 aluminio.set_density('g/cm3', 2.7)
 
 materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
-materiais.cross_sections = "/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/cross_sections.xml"
+#materiais.cross_sections = "/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/cross_sections.xml"
 materiais.export_to_xml()
 
 ################################################
@@ -406,14 +406,19 @@ else:
 ################################################
 ############ Definição da Simulação ############
 ################################################
+#settings = openmc.Settings()
+#settings.particles = 100000
+#settings.batches = 400
+#settings.inactive = 40
+#settings.source = openmc.Source(space=openmc.stats.Point())
+#settings.export_to_xml()
+
 settings = openmc.Settings()
-settings.particles = 100000
-settings.batches = 400
-settings.inactive = 40
-settings.source = openmc.Source(space=openmc.stats.Point())
+settings.run_mode = 'fixed source'
+settings.particles = 1000
+settings.batches = 100
+settings.inactive = 0
 settings.export_to_xml()
-
-
 
 
 
