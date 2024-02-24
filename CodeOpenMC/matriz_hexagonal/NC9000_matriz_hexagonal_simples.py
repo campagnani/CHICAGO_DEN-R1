@@ -127,7 +127,7 @@ aluminio.add_nuclide('Al27', 1 , percent_type ='wo')
 aluminio.set_density('g/cm3', 2.7)
 
 materiais = openmc.Materials([combustivel,moderador,ar,aluminio,])
-#materiais.cross_sections = "/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/cross_sections.xml"
+materiais.cross_sections = "/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/cross_sections.xml"
 materiais.export_to_xml()
 
 ################################################
@@ -147,10 +147,6 @@ altura_tanque          = fundo_tanque_inferior + Tanque_Altura
 refletor_interno_superior = fundo_tanque_superior + 6.5*2.54
 suporte_interno_superior = refletor_interno_superior + 0.2
 elemento_combustivel = suporte_interno_superior + Barra_combustivel_Comprimento*5
-
-##Planos internos a vareta central
-#refletor_interno_central = fundo_tanque + 5*2.54
-#suporte_interno_central = refletor_interno + 0.2
 
 clad_comb_1               = suporte_interno_superior + 0.5    #
 clad_comb_2               = clad_comb_1  + 20.45     # Fuel
@@ -220,7 +216,7 @@ cilindro_raio_interno_tanque    = openmc.ZCylinder(r=lateral_tanque_interna/2)
 cilindro_raio_externo_tanque    = openmc.ZCylinder(r=Tanque_Diametro/2)
 
 
-#Universo Vareta
+# Células Vareta
 celula_moderador1               = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
 celula_moderador2               = openmc.Cell(fill=moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
 celula_moderador3               = openmc.Cell(fill=moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
@@ -236,7 +232,7 @@ celula_clad_combustivel_externo = openmc.Cell(fill=aluminio,    region=+plano_su
 celula_ar_interno_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&-clad_raio_interno_combustivel)
 celula_ar_externo_elemento      = openmc.Cell(fill=ar,          region=+plano_suporte_interno&-plano_elemento_combustivel&+clad_raio_externo_combustivel&-cilindro_raio_interno_vareta)
 celula_ar_superior_interno      = openmc.Cell(fill=ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
-celula_ar_externo_vareta        = openmc.Cell(fill=ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta)
+celula_ar_externo_vareta        = openmc.Cell(fill=ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_externo_vareta)
 
 celula_combustivel_1 = openmc.Cell(fill=combustivel, region=+plano_clad_comb_1&-plano_clad_comb_2&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
 celula_combustivel_2 = openmc.Cell(fill=combustivel, region=+plano_clad_comb_4&-plano_clad_comb_5&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
@@ -256,10 +252,56 @@ celula_clad_8      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_11&-plan
 celula_clad_9      = openmc.Cell(fill=aluminio, region=+plano_clad_comb_12&-plano_clad_comb_13&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
 celula_clad_10     = openmc.Cell(fill=aluminio, region=+plano_clad_comb_14&-plano_clad_comb_15&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
 
-#Celulas específicas para o Universo Vareta Central (fonte)
-#celula_refletor_fonte           = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_interno_central&-cilindro_raio_interno_vareta)
-#celula_suporte_interno_fonte    = openmc.Cell(fill=aluminio,    region=+plano_refletor_interno_central&-plano_suporte_interno_central&-cilindro_raio_interno_vareta)
-#celula_moderador_interno_fonte  = openmc.Cell(fill=moderador,   region=+plano_suporte_interno_central&-plano_vareta_altura&-cilindro_raio_interno_vareta)
+####################################################################################################################################
+############################### Celulas e superfícies específicas para o Universo Vareta Central (fonte)############################
+####################################################################################################################################
+
+##Planos internos a vareta central
+suporte_interno_central = fundo_tanque_superior + 5*2.54
+refletor_inferior_interno_central = suporte_interno_central - 0.2
+limite_fonte_inferior              = suporte_interno_central + 0.1
+limite_fonte_superior              = suporte_interno_central + 19.9
+limite_clad_fonte_superior        = suporte_interno_central + 20
+diametro_cilindro_fonte = 2.9 # cm
+diametro_clad_fonte     = 3.0 # cm
+
+plano_superior_suporte_fonte = openmc.ZPlane(z0=suporte_interno_central)
+plano_inferior_suporte_fonte = openmc.ZPlane(z0=refletor_inferior_interno_central)
+plano_superior_fonte         = openmc.ZPlane(z0=limite_fonte_superior)
+plano_inferior_fonte         = openmc.ZPlane(z0=limite_fonte_inferior)
+plano_clad_fonte_superior    = openmc.ZPlane(z0=limite_clad_fonte_superior)
+
+superficie_radial_fonte      = openmc.ZCylinder(r=diametro_cilindro_fonte/2)
+superficie_radial_clad_fonte = openmc.ZCylinder(r=diametro_clad_fonte/2)
+
+celula_refletor_inferior_fonte  = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_inferior_suporte_fonte&-cilindro_raio_interno_vareta)
+celula_suporte_interno_fonte    = openmc.Cell(fill=aluminio,    region=+plano_inferior_suporte_fonte&-plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
+celula_fonte                    = openmc.Cell(fill=combustivel,   region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_fonte)  #trocar para a fonte
+celula_clad_fonte               = openmc.Cell(fill=aluminio,    region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_clad_fonte&+superficie_radial_fonte
+                                                                 | +plano_superior_suporte_fonte&-plano_inferior_fonte&-superficie_radial_clad_fonte
+                                                                 | +plano_superior_fonte&-plano_clad_fonte_superior&-superficie_radial_clad_fonte)  #trocar para aço inox
+celula_refletor_lateral_fonte   = openmc.Cell(fill=moderador,   region=+plano_superior_suporte_fonte&-plano_clad_fonte_superior&-cilindro_raio_interno_vareta&+superficie_radial_clad_fonte)
+celula_refletor_superior_fonte  = openmc.Cell(fill=moderador,   region=+plano_clad_fonte_superior&-plano_refletor_lateral_superior&-cilindro_raio_interno_vareta)
+
+# CÉLULAS QUE FORAM DUPLICADAS PELO FATO DE NÃO PODER REUTILIZAR CÉLULAS PARA OUTROS UNIVERSOS
+celula_moderador1_fonte          = openmc.Cell(fill=moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
+celula_moderador2_fonte          = openmc.Cell(fill=moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
+celula_moderador3_fonte          = openmc.Cell(fill=moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
+celula_grade_inferior_fonte      = openmc.Cell(fill=aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
+celula_grade_superior_fonte      = openmc.Cell(fill=aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
+celula_clad_vareta_fonte         = openmc.Cell(fill=aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
+celula_ar_externo_vareta_fonte   = openmc.Cell(fill=ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_externo_vareta)
+celula_ar_superior_interno_fonte = openmc.Cell(fill=ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
+
+
+universo_fonte = openmc.Universe(cells=(celula_clad_vareta_fonte,celula_refletor_inferior_fonte,celula_suporte_interno_fonte,
+                                        celula_fonte,celula_clad_fonte,celula_refletor_lateral_fonte,
+                                        celula_refletor_superior_fonte,celula_ar_externo_vareta_fonte,
+                                        celula_grade_superior_fonte, celula_grade_inferior_fonte,celula_ar_superior_interno_fonte,
+                                        celula_moderador1_fonte, celula_moderador2_fonte, celula_moderador3_fonte))
+
+####################################################################################################################################
+####################################################################################################################################
 
 #Celula para universo apenas com refletor
 celula_refletor                 = openmc.Cell(fill=moderador, region=+plano_fundo_tanque_superior&-plano_grade_inferior_1
@@ -310,7 +352,7 @@ anel_comb_mod_4  = [universo_vareta_combustível]*24
 anel_comb_mod_3  = [universo_vareta_combustível]*18
 anel_comb_mod_2  = [universo_vareta_combustível]*12
 anel_comb_mod_1  = [universo_vareta_combustível]*6
-anel_font_mod_0  = [universo_vareta_combustível]#[universo_vareta_central]
+anel_font_mod_0  = [universo_fonte]  #[universo_vareta_combustível]
 
 matriz_hexagonal.universes = [anel_misturado_10, anel_comb_mod_9, anel_comb_mod_8, anel_comb_mod_7, anel_comb_mod_6, anel_comb_mod_5, anel_comb_mod_4, anel_comb_mod_3, anel_comb_mod_2, anel_comb_mod_1, anel_font_mod_0]
 print(matriz_hexagonal)
@@ -358,7 +400,7 @@ secao_transversal.basis = 'xz'
 secao_transversal.width = [200,200]
 secao_transversal.origin = (0,0,vareta_altura/2)
 secao_transversal.filename = 'plot_secao_transversal'
-secao_transversal.pixels = [10000,10000]
+secao_transversal.pixels = [20000,20000]
 secao_transversal.color_by = 'material'
 secao_transversal.colors = colors = {
     moderador: 'blue',
@@ -406,19 +448,19 @@ else:
 ################################################
 ############ Definição da Simulação ############
 ################################################
-#settings = openmc.Settings()
-#settings.particles = 100000
-#settings.batches = 400
-#settings.inactive = 40
-#settings.source = openmc.Source(space=openmc.stats.Point())
-#settings.export_to_xml()
-
 settings = openmc.Settings()
-settings.run_mode = 'fixed source'
 settings.particles = 1000
-settings.batches = 100
-settings.inactive = 0
+settings.batches = 400
+settings.inactive = 40
+settings.source = openmc.Source(space=openmc.stats.Point())
 settings.export_to_xml()
+
+#settings = openmc.Settings()
+#settings.run_mode = 'fixed source'
+#settings.particles = 1000
+#settings.batches = 100
+#settings.inactive = 0
+#settings.export_to_xml()
 
 
 
@@ -445,4 +487,4 @@ settings.export_to_xml()
 ################################################
 ############ Executando Código      ############
 ################################################
-openmc.run()
+#openmc.run()
