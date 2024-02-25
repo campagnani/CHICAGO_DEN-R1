@@ -1,2 +1,4 @@
-
-*.h5
+#Arquivos gerados pelo OpenMC
+CodeOpenMC/*.h5
+CodeOpenMC/*.png
+CodeOpenMC/*.xml
