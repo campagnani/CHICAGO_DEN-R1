@@ -99,6 +99,7 @@ class ChigagoDenR1:
         self.aluminio.set_density('g/cm3', 2.7)
 
         self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,])
+        self.materiais.cross_sections= '/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/HDF5/cross_sections.xml'
         self.materiais.export_to_xml()
         
         #Já definir as cores dos materiais para futuros plots
@@ -194,7 +195,7 @@ class ChigagoDenR1:
         #Diâmetro médio do núcleo: 800 mm
 
         #Variáveis de Dimenções dos planos
-        fundo_tanque_inferior = 0
+        fundo_tanque_inferior = -Tanque_Altura/2
         fundo_tanque_superior = fundo_tanque_inferior + Tanque_Espessura
         vareta_altura = Vareta_combustivel_Comprimento
         nivel_dagua = vareta_altura - 6*2.54
@@ -365,9 +366,19 @@ class ChigagoDenR1:
         ###############################     Celulas e superfícies específicas para o Universo agua (central)    ############################
         ####################################################################################################################################
 
-        self.celula_agua   = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&-cilindro_raio_externo_vareta)
-        self.celula_agua_2 = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
-        self.universo_agua = openmc.Universe(cells=(self.celula_agua,self.celula_agua_2))  # Identidade da agua
+        self.celula_agua               = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&-cilindro_raio_externo_vareta)
+        self.celula_agua_2             = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
+        self.celula_agua_3             = openmc.Cell(fill=self.moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
+        self.celula_agua_4             = openmc.Cell(fill=self.moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
+        self.celula_ar_central         = openmc.Cell(fill=self.ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&-cilindro_raio_externo_vareta)
+        self.celula_ar_central_externa = openmc.Cell(fill=self.ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_externo_vareta)
+
+        self.celula_central_grade_inferior  = openmc.Cell(fill=self.aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
+        self.celula_central_grade_superior  = openmc.Cell(fill=self.aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
+        
+        self.universo_agua = openmc.Universe(cells=(self.celula_agua,self.celula_agua_2, self.celula_agua_3, self.celula_agua_4, self.celula_ar_central, 
+                                                    self.celula_ar_central_externa, self.celula_central_grade_inferior, self.celula_central_grade_superior))  
+                                                    # Identidade da agua
 
         ####################################################################################################################################
         ####################################################################################################################################
@@ -800,7 +811,7 @@ class ChigagoDenR1:
         self.geometria_fonte = openmc.Geometry([self.celula_outer])
         self.geometria_fonte.export_to_xml()
 
-    def plot2D_secao_transversal_agua(self,basis="xz",width=[200,200],pixels=[20000,20000],origin=None):
+    def plot2D_secao_transversal_agua(self,basis="xz",width=[200,200],pixels=[20000,20000],origin=(0,0,0)):
         print("################################################")
         print("############        Plot 2D         ############")
         print("################################################")
@@ -809,8 +820,6 @@ class ChigagoDenR1:
         secao_transversal_agua.type = 'slice'
         secao_transversal_agua.basis = basis
         secao_transversal_agua.width = width
-        if origin==None:
-           origin=(0,0,self.Tanque_Altura/2)
         secao_transversal_agua.origin = origin
         secao_transversal_agua.filename = 'plot_secao_transversal_' + basis
         secao_transversal_agua.pixels = pixels
@@ -832,14 +841,14 @@ class ChigagoDenR1:
         plot_3d_agua.pixels = (1000, 1000, 1000)
         plot_3d_agua.color_by = 'material'
         plot_3d_agua.colors = self.colors
-        plot_3d_agua.width = (15., 15., 15.)
+        plot_3d_agua.width = (150., 150., 150.)
         ############ Exportar Plots e Plotar
         plotagem = openmc.Plots((plot_3d_agua,))
         plotagem.export_to_xml()  
         openmc.plot_geometry()
-        #os.system('openmc-voxel-to-vtk plot_voxel.h5 -o plot_voxel')
+        os.system('openmc-voxel-to-vtk plot_voxel.h5 -o plot_voxel')
     
-    def plot2D_secao_transversal_fonte(self,basis="xz",width=[200,200],pixels=[20000,20000],origin=None):
+    def plot2D_secao_transversal_fonte(self,basis="xz",width=[200,200],pixels=[20000,20000],origin=(0,0,0)):
         print("################################################")
         print("############        Plot 2D         ############")
         print("################################################")
@@ -848,8 +857,6 @@ class ChigagoDenR1:
         secao_transversal_fonte.type = 'slice'
         secao_transversal_fonte.basis = basis
         secao_transversal_fonte.width = width
-        if origin==None:
-           origin=(0,0,self.Tanque_Altura/2)
         secao_transversal_fonte.origin = origin
         secao_transversal_fonte.filename = 'plot_secao_transversal_' + basis
         secao_transversal_fonte.pixels = pixels
@@ -871,7 +878,7 @@ class ChigagoDenR1:
         plot_3d_fonte.pixels = (1000, 1000, 1000)
         plot_3d_fonte.color_by = 'material'
         plot_3d_fonte.colors = self.colors
-        plot_3d_fonte.width = (15., 15., 15.)
+        plot_3d_fonte.width = (150., 150., 150.)
         ############ Exportar Plots e Plotar
         plotagem = openmc.Plots((plot_3d_fonte,))
         plotagem.export_to_xml()  
