@@ -6,3 +6,4 @@ CodeOpenMC/**/__pycache__
 *.h5
 *.xml
 *.endf
+*.vti
