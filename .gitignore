@@ -4,3 +4,5 @@ CodeOpenMC/**/*.png
 CodeOpenMC/**/*.xml
 CodeOpenMC/**/__pycache__
 *.h5
+*.xml
+*.endf
