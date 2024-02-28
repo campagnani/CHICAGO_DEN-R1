@@ -28,11 +28,11 @@ chicago.plot2D_secao_transversal('xz')
 chicago.plot3D()
 
 # Calcular Keff
-#libChicagoDenR1.mkdir(voltar=True, nome="keff", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=10000, ciclos=220, inativo=20, fonte=False)
-#chicago.run()
-##
-### Operaçao com fonte fixa
-#libChicagoDenR1.mkdir(voltar=True, nome="fonte", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=10000, ciclos=220, inativo=20, fonte=True)
-#chicago.run()
+libChicagoDenR1.mkdir(voltar=True, nome="keff", data=False)
+chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=10000, ciclos=220, inativo=20, fonte=False)
+chicago.run()
+#
+## Operaçao com fonte fixa
+libChicagoDenR1.mkdir(voltar=True, nome="fonte", data=False)
+chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=10000, ciclos=220, inativo=20, fonte=True)
+chicago.run()

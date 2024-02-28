@@ -97,7 +97,44 @@ class ChigagoDenR1:
         self.aluminio.add_nuclide('Al27', 1 , percent_type ='wo')
         self.aluminio.set_density('g/cm3', 2.7)
 
-        self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,])
+        self.SS316L = openmc.Material(name='Aço INOX')
+        self.SS316L.add_nuclide('C12',   2.9639E-04, percent_type = 'wo')
+        self.SS316L.add_nuclide('C13',   3.6051E-06, percent_type = 'wo')
+        self.SS316L.add_nuclide('N14',   9.9608E-04, percent_type = 'wo')
+        self.SS316L.add_nuclide('N15',   3.9196E-06, percent_type = 'wo')
+        self.SS316L.add_nuclide('S32',   2.8424E-04, percent_type = 'wo')
+        self.SS316L.add_nuclide('S33',   2.3137E-06, percent_type = 'wo')
+        self.SS316L.add_nuclide('S34',   1.3380E-05, percent_type = 'wo')
+        self.SS316L.add_nuclide('S36',   6.7303E-08, percent_type = 'wo')
+        self.SS316L.add_nuclide('P31',   4.5000E-04, percent_type = 'wo')
+        self.SS316L.add_nuclide('Si28',  6.8905E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Si29',  3.6136E-04, percent_type = 'wo')
+        self.SS316L.add_nuclide('Si30',  2.4813E-04, percent_type = 'wo')
+        self.SS316L.add_nuclide('Fe54',  3.6055E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Fe56',  5.8692E-01, percent_type = 'wo')
+        self.SS316L.add_nuclide('Fe57',  1.3797E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Fe58',  1.8683E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mn55',  2.0000E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Cr50',  3.3926E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Cr52',  6.8034E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Cr53',  7.8631E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Cr54',  1.9942E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Ni58',  8.0637E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Ni60',  3.2131E-02, percent_type = 'wo')
+        self.SS316L.add_nuclide('Ni61',  1.4202E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Ni62',  4.6012E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Ni64',  1.2103E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mo92',  3.5544E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mo94',  2.2637E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mo95',  3.9375E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mo96',  4.1688E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mo97',  2.4118E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mo98',  6.1566E-03, percent_type = 'wo')
+        self.SS316L.add_nuclide('Mo100', 2.5073E-03, percent_type = 'wo')
+        self.SS316L.set_density('g/cm3', 8.0)
+
+        self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,self.SS316L,])
+        self.materiais.cross_sections = '/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/HDF5/cross_sections.xml' 
         self.materiais.export_to_xml()
         
         #Já definir as cores dos materiais para futuros plots
@@ -105,7 +142,8 @@ class ChigagoDenR1:
             self.moderador: 'blue',
             self.combustivel: 'yellow',
             self.ar: 'pink',
-            self.aluminio: 'black'
+            self.aluminio: 'black',
+            self.SS316L: 'brown'
         }
 
 
@@ -474,17 +512,17 @@ class ChigagoDenR1:
         print("############        Plot 2D         ############")
         print("################################################")
         ############ Plotar Secão Transversal
-        secao_transversal_fonte = openmc.Plot.from_geometry(self.geometria)
-        secao_transversal_fonte.type = 'slice'
-        secao_transversal_fonte.basis = basis
-        secao_transversal_fonte.width = width
-        secao_transversal_fonte.origin = origin
-        secao_transversal_fonte.filename = 'plot_secao_transversal_' + basis
-        secao_transversal_fonte.pixels = pixels
-        secao_transversal_fonte.color_by = 'material'
-        secao_transversal_fonte.colors = self.colors
+        secao_transversal = openmc.Plot.from_geometry(self.geometria)
+        secao_transversal.type = 'slice'
+        secao_transversal.basis = basis
+        secao_transversal.width = width
+        secao_transversal.origin = origin
+        secao_transversal.filename = 'plot_secao_transversal_' + basis
+        secao_transversal.pixels = pixels
+        secao_transversal.color_by = 'material'
+        secao_transversal.colors = self.colors
         ############ Exportar Plots e Plotar
-        plotagem = openmc.Plots((secao_transversal_fonte,))
+        plotagem = openmc.Plots((secao_transversal,))
         plotagem.export_to_xml()  
         openmc.plot_geometry()
 
@@ -493,18 +531,18 @@ class ChigagoDenR1:
         print("############        Plot 3D         ############")
         print("################################################")
         ############ Plotar em 3D
-        plot_3d_fonte = openmc.Plot.from_geometry(self.geometria)
-        plot_3d_fonte.type = 'voxel'
-        plot_3d_fonte.filename = 'plot_voxel'
-        plot_3d_fonte.pixels = (500, 500, 500)
-        plot_3d_fonte.color_by = 'material'
-        plot_3d_fonte.colors = self.colors
-        plot_3d_fonte.width = (150., 150., 150.)
+        plot_3d = openmc.Plot.from_geometry(self.geometria)
+        plot_3d.type = 'voxel'
+        plot_3d.filename = 'plot_voxel'
+        plot_3d.pixels = (500, 500, 500)
+        plot_3d.color_by = 'material'
+        plot_3d.colors = self.colors
+        plot_3d.width = (150., 150., 150.)
         ############ Exportar Plots e Plotar
-        plotagem = openmc.Plots((plot_3d_fonte,))
+        plotagem = openmc.Plots((plot_3d,))
         plotagem.export_to_xml()  
         openmc.plot_geometry()
-        openmc.voxel_to_vtk(plot_3d_fonte.filename+'.h5', plot_3d_fonte.filename)
+        openmc.voxel_to_vtk(plot_3d.filename+'.h5', plot_3d.filename)
 
 
     def configuracoes(self,fonte=True,particulas=1000,ciclos=100,inativo=10,atrasados=True):
