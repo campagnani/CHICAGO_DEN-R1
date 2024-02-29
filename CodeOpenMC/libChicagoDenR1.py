@@ -97,43 +97,48 @@ class ChigagoDenR1:
         self.aluminio.add_nuclide('Al27', 1 , percent_type ='wo')
         self.aluminio.set_density('g/cm3', 2.7)
 
-        self.SS316L = openmc.Material(name='Aço INOX')
-        self.SS316L.add_nuclide('C12',   2.9639E-04, percent_type = 'wo')
-        self.SS316L.add_nuclide('C13',   3.6051E-06, percent_type = 'wo')
-        self.SS316L.add_nuclide('N14',   9.9608E-04, percent_type = 'wo')
-        self.SS316L.add_nuclide('N15',   3.9196E-06, percent_type = 'wo')
-        self.SS316L.add_nuclide('S32',   2.8424E-04, percent_type = 'wo')
-        self.SS316L.add_nuclide('S33',   2.3137E-06, percent_type = 'wo')
-        self.SS316L.add_nuclide('S34',   1.3380E-05, percent_type = 'wo')
-        self.SS316L.add_nuclide('S36',   6.7303E-08, percent_type = 'wo')
-        self.SS316L.add_nuclide('P31',   4.5000E-04, percent_type = 'wo')
-        self.SS316L.add_nuclide('Si28',  6.8905E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Si29',  3.6136E-04, percent_type = 'wo')
-        self.SS316L.add_nuclide('Si30',  2.4813E-04, percent_type = 'wo')
-        self.SS316L.add_nuclide('Fe54',  3.6055E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Fe56',  5.8692E-01, percent_type = 'wo')
-        self.SS316L.add_nuclide('Fe57',  1.3797E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Fe58',  1.8683E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mn55',  2.0000E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Cr50',  3.3926E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Cr52',  6.8034E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Cr53',  7.8631E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Cr54',  1.9942E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Ni58',  8.0637E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Ni60',  3.2131E-02, percent_type = 'wo')
-        self.SS316L.add_nuclide('Ni61',  1.4202E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Ni62',  4.6012E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Ni64',  1.2103E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mo92',  3.5544E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mo94',  2.2637E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mo95',  3.9375E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mo96',  4.1688E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mo97',  2.4118E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mo98',  6.1566E-03, percent_type = 'wo')
-        self.SS316L.add_nuclide('Mo100', 2.5073E-03, percent_type = 'wo')
-        self.SS316L.set_density('g/cm3', 8.0)
+        self.SS304 = openmc.Material(name='Aço INOX')
+        self.SS304.add_nuclide('C12',   2.9639E-04, percent_type = 'wo')
+        self.SS304.add_nuclide('C13',   3.6051E-06, percent_type = 'wo')
+        self.SS304.add_nuclide('N14',   9.9608E-04, percent_type = 'wo')
+        self.SS304.add_nuclide('N15',   3.9196E-06, percent_type = 'wo')
+        self.SS304.add_nuclide('S32',   2.8424E-04, percent_type = 'wo')
+        self.SS304.add_nuclide('S33',   2.3137E-06, percent_type = 'wo')
+        self.SS304.add_nuclide('S34',   1.3380E-05, percent_type = 'wo')
+        self.SS304.add_nuclide('S36',   6.7303E-08, percent_type = 'wo')
+        self.SS304.add_nuclide('P31',   4.5000E-04, percent_type = 'wo')
+        self.SS304.add_nuclide('Si28',  6.8905E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Si29',  3.6136E-04, percent_type = 'wo')
+        self.SS304.add_nuclide('Si30',  2.4813E-04, percent_type = 'wo')
+        self.SS304.add_nuclide('Fe54',  3.6055E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Fe56',  5.8692E-01, percent_type = 'wo')
+        self.SS304.add_nuclide('Fe57',  1.3797E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Fe58',  1.8683E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Mn55',  2.0000E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Cr50',  3.3926E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Cr52',  6.8034E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Cr53',  7.8631E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Cr54',  1.9942E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Ni58',  8.0637E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Ni60',  3.2131E-02, percent_type = 'wo')
+        self.SS304.add_nuclide('Ni61',  1.4202E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Ni62',  4.6012E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Ni64',  1.2103E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Mo92',  3.5544E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Mo94',  2.2637E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Mo95',  3.9375E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Mo96',  4.1688E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Mo97',  2.4118E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Mo98',  6.1566E-03, percent_type = 'wo')
+        self.SS304.add_nuclide('Mo100', 2.5073E-03, percent_type = 'wo')
+        self.SS304.set_density('g/cm3', 8.0)
 
-        self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,self.SS316L,])
+        self.fonte = openmc.Material(name='Plutonio Berilio')
+        self.fonte.add_nuclide('Pu239',percent=1)
+        self.fonte.add_nuclide('Be7',percent=6)
+        self.fonte.set_density('g/cm3', 15.0)
+
+        self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,self.SS304,self.fonte,])
         self.materiais.cross_sections = '/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/HDF5/cross_sections.xml' 
         self.materiais.export_to_xml()
         
@@ -143,7 +148,8 @@ class ChigagoDenR1:
             self.combustivel: 'yellow',
             self.ar: 'pink',
             self.aluminio: 'black',
-            self.SS316L: 'brown'
+            self.SS304: 'brown',
+            self.fonte: 'red'
         }
 
 
@@ -182,7 +188,7 @@ class ChigagoDenR1:
             #Dimensões:
         Vareta_combustivel_Espessura        = 	0.1     #cm
         Vareta_combustivel_Diametro_interno =   3.32    #± 0,2 cm.
-        Vareta_combustivel_Comprimento      =   149.86  #59"
+        Vareta_combustivel_Comprimento      =   59*2.54  #59"
 
         #Interior:
         #Parte Superior: 5 barras de combustível em série e ar.
@@ -217,7 +223,7 @@ class ChigagoDenR1:
             #Composição: alumínio
             #Dimensões:
         Grade_Espessura =   1
-        Grade_Diametro  =   Tanque_Diametro
+        Grade_Diametro  =   96 #cm CHECAR**************************************************************
             #Quantidade: duas.
             #Posicionamento:
                 #Primeira: fundo do tanque
@@ -310,6 +316,7 @@ class ChigagoDenR1:
         cilindro_raio_externo_vareta    = openmc.ZCylinder(r=Vareta_combustivel_Diametro_interno/2+Vareta_combustivel_Espessura)
         cilindro_raio_interno_tanque    = openmc.ZCylinder(r=lateral_tanque_interna/2)
         cilindro_raio_externo_tanque    = openmc.ZCylinder(r=Tanque_Diametro/2)
+        cilindro_raio_externo_grade     = openmc.ZCylinder(r=Grade_Diametro/2)
 
 
         # Células Vareta
@@ -372,7 +379,7 @@ class ChigagoDenR1:
 
         self.celula_refletor_inferior_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_inferior_suporte_fonte&-cilindro_raio_interno_vareta)
         self.celula_suporte_interno_fonte    = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_suporte_fonte&-plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
-        self.celula_fonte                    = openmc.Cell(fill=self.combustivel,   region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_fonte)  #trocar para a fonte
+        self.celula_fonte                    = openmc.Cell(fill=self.fonte,   region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_fonte)  #trocar para a fonte
         self.celula_clad_fonte               = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_clad_fonte&+superficie_radial_fonte
                                                                         | +plano_superior_suporte_fonte&-plano_inferior_fonte&-superficie_radial_clad_fonte
                                                                         | +plano_superior_fonte&-plano_clad_fonte_superior&-superficie_radial_clad_fonte)  #trocar para aço inox
@@ -421,9 +428,9 @@ class ChigagoDenR1:
         ####################################################################################################################################
 
         #Celula para universo apenas com refletor
-        self.celula_refletor                 = openmc.Cell(fill=self.moderador, region=+plano_fundo_tanque_superior&-plano_grade_inferior_1
-                                                                        | +plano_grade_inferior_2&-plano_grade_superior_1
-                                                                        | +plano_grade_superior_2&-plano_refletor_lateral_superior)
+        self.celula_refletor_matriz          = openmc.Cell(fill=self.moderador, region=+plano_fundo_tanque_superior&-plano_grade_inferior_1
+                                                                                     | +plano_grade_inferior_2&-plano_grade_superior_1
+                                                                                     | +plano_grade_superior_2&-plano_refletor_lateral_superior                                                                                     )
         self.celula_grade_externa_inferior   = openmc.Cell(fill=self.aluminio,  region=+plano_grade_inferior_1&-plano_grade_inferior_2)
         self.celula_grade_externa_superior   = openmc.Cell(fill=self.aluminio,  region=+plano_grade_superior_1&-plano_grade_superior_2)
         self.celula_ar_externo               = openmc.Cell(fill=self.ar,        region=+plano_refletor_lateral_superior&-plano_vareta_altura)
@@ -440,7 +447,7 @@ class ChigagoDenR1:
         #self.universo_vareta_central         = openmc.Universe(cells=(self.celula_vareta,self.celula_refletor_fonte,self.celula_suporte_interno_fonte, \
         #                                                         self.celula_moderador_interno_fonte, self.celula_moderador))
 
-        self.universo_agua_ar               = openmc.Universe(cells=(self.celula_refletor,self.celula_ar_externo,self.celula_grade_externa_inferior,
+        self.universo_agua_ar               = openmc.Universe(cells=(self.celula_refletor_matriz,self.celula_ar_externo,self.celula_grade_externa_inferior,
                                                                 self.celula_grade_externa_superior))
 
         #Criação da Matriz Hexagonal
@@ -477,12 +484,14 @@ class ChigagoDenR1:
         matriz_hexagonal.universes = [anel_misturado_10, anel_comb_mod_9, anel_comb_mod_8, anel_comb_mod_7, anel_comb_mod_6, anel_comb_mod_5, anel_comb_mod_4, anel_comb_mod_3, anel_comb_mod_2, anel_comb_mod_1, anel_font_mod_0]
         print(matriz_hexagonal)
         #A celula do reator é preenchida com a matriz_hexagonal e depois água, até chegar na superficie lateral do refletor
-        self.celula_reator_matriz_hexagonal  = openmc.Cell(fill=matriz_hexagonal, region=-cilindro_raio_interno_tanque&-plano_vareta_altura&+plano_fundo_tanque_superior)
+        self.celula_reator_matriz_hexagonal  = openmc.Cell(fill=matriz_hexagonal, region=-cilindro_raio_externo_grade&-plano_vareta_altura&+plano_fundo_tanque_superior)
 
         ## Celulas externas a matriz hexagonal
 
         #Tanque
-        self.celula_tanque = openmc.Cell(fill=self.aluminio, region=+cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_fundo_tanque_superior&-plano_altura_tanque
+        self.celula_refletor = openmc.Cell(fill=self.moderador, region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&+cilindro_raio_externo_grade&-cilindro_raio_interno_tanque)
+        self.celula_ar_externo_matriz = openmc.Cell(fill=self.ar, region=+plano_refletor_lateral_superior&-plano_altura_tanque&+cilindro_raio_externo_grade&-cilindro_raio_interno_tanque)
+        self.celula_tanque   = openmc.Cell(fill=self.SS304, region=+cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_fundo_tanque_superior&-plano_altura_tanque
                                                                 | +plano_fundo_tanque_inferior&-plano_fundo_tanque_superior&-cilindro_raio_externo_tanque)
 
         self.celula_ar_interna_tanque = openmc.Cell(fill=self.ar, region=-cilindro_raio_interno_tanque&+plano_vareta_altura&-plano_altura_tanque)
@@ -498,7 +507,7 @@ class ChigagoDenR1:
                                                             | -cilindro_boundary&-plano_fundo_tanque_inferior&+plano_inferior_boundary)
 
         # Universo outer
-        self.universo_fora = openmc.Universe(cells=(self.celula_reator_matriz_hexagonal,self.celula_tanque,self.celula_ar_externa_tanque,self.celula_ar_interna_tanque))
+        self.universo_fora = openmc.Universe(cells=(self.celula_reator_matriz_hexagonal, self.celula_refletor, self.celula_ar_externo_matriz,self.celula_tanque,self.celula_ar_externa_tanque,self.celula_ar_interna_tanque))
         # Célula outer
         self.celula_outer = openmc.Cell(fill=self.universo_fora, region=-cilindro_boundary&+plano_inferior_boundary&-plano_superior_boundary)
 

@@ -3,6 +3,8 @@
   <directory>/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/HDF5/</directory>
   <library materials="H1"    path=  "H1.h5"    type="neutron" />
   <library materials="H2"    path=  "H2.h5"    type="neutron" />
+  <library materials="Be7"   path= "Be7.h5"    type="neutron" />
+  <library materials="Be9"   path= "Be9.h5"    type="neutron" />
   <library materials="N14"   path= "N14.h5"    type="neutron" />
   <library materials="N15"   path= "N15.h5"    type="neutron" />
   <library materials="O16"   path= "O16.h5"    type="neutron" />
@@ -15,6 +17,7 @@
   <library materials="U235"  path="U235.h5"    type="neutron" />
   <library materials="U234"  path="U234.h5"    type="neutron" />
   <library materials="U238"  path="U238.h5"    type="neutron" />
+  <library materials="Pu239"  path="Pu239.h5"    type="neutron" />
   <library materials="C12"   path= "C12.h5"    type="neutron" />
   <library materials="C13"   path= "C13.h5"    type="neutron" />
   <library materials="Cr50"  path="Cr50.h5"    type="neutron" />
