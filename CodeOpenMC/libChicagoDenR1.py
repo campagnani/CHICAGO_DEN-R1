@@ -678,7 +678,6 @@ class ChigagoDenR1:
         #    h = z_divisions[1] - z_divisions[0]
         #    volume.append(3.14159265359 * (r2**2 - r1**2) * h)
 
-        fluxo_científico = []
         for i in range(0,100):
             fluxo     = flux_rad[i]
             incerteza = flux_rad_dev[i]
