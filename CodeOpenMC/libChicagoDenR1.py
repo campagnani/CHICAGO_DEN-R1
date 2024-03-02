@@ -613,7 +613,7 @@ class ChigagoDenR1:
             print("################################################")
             openmc.run()
 
-    def tallyMesh(self,):
+    def tallies(self,):
         print("################################################")
         print("###########        Mesh Radial      ############")
         print("################################################")
@@ -623,7 +623,7 @@ class ChigagoDenR1:
         mesh_radial = openmc.CylindricalMesh(r_grid = (r_divisions), z_grid = (z_divisions))
         mesh_filter_radial = openmc.MeshFilter(mesh_radial)
         tally_radial = openmc.Tally(name='MESH_Radial')
-        tally_radial.filters.append([mesh_filter_radial]) #, energy_filter])
+        #tally_radial.filters.append(mesh_filter_radial, energy_filter)
         tally_radial.scores.append('flux')
 
         #print("################################################")
@@ -634,9 +634,9 @@ class ChigagoDenR1:
         #z_divisions = np.linspace( self.fronteira_ar_inferior,self.fronteira_ar_superior,101).tolist() 
         #energy_filter = openmc.EnergyFilter([1.0E-05, 1, 20E+06]) 
         #mesh_cubico = openmc.RectilinearMesh(x_grid = (x_divisions), y_grid = (y_divisions), z_grid = (z_divisions))
-        #mesh_filter_cubico = openmc.MeshFilter(mesh_cubico, energy_filter)
+        #mesh_filter_cubico = openmc.MeshFilter(mesh_cubico)
         #tally_cubico = openmc.Tally(name='MESH_Cubico')
-        #tally_cubico.filters.append(mesh_filter_cubico)
+        #tally_cubico.filters.append(mesh_filter_cubico, energy_filter)
         #tally_cubico.scores.append('flux')
 
         ############## Coleção de tallies ##############
@@ -657,11 +657,13 @@ class ChigagoDenR1:
         print('')
 
         # Acesse os resultados do tally radial
-        flux   = sp.get_tally(scores=['flux'])
+        flux_radial  = sp.get_tally(scores=['flux'], name='MESH_Radial')
+        flux_cubico  = sp.get_tally(scores=['flux'], name='MESH_Cubico')
 
-        flux_meanshape = flux.mean.shape
-        flux_mean      = flux.mean
-        flux_std_dev   = flux.std_dev
+        flux_rad     = flux_radial.mean
+        flux_rad_dev = flux_radial.std_dev
+        flux_cub     = flux_cubico.mean
+        flux_cub_dev = flux_cubico.std_dev
 
         # Retirando o mesh radial
         print('')
@@ -676,8 +678,14 @@ class ChigagoDenR1:
         #    h = z_divisions[1] - z_divisions[0]
         #    volume.append(3.14159265359 * (r2**2 - r1**2) * h)
 
+        fluxo_científico = []
         for i in range(0,100):
-            print("  Intervalo ", (self.fronteira_ar_lateral/101)*i,": ","\t"," Fluxo : ", flux_mean[i], "+/-", flux_std_dev[i], "[neutron/cm².s]")
+            fluxo     = flux_rad[i]
+            incerteza = flux_rad_dev[i]
+            fluxo_científico = format(fluxo, '.4e')
+            inc_cientifico   = format(incerteza, '.4e')
+            print("  Intervalo ", (self.fronteira_ar_lateral/101)*i,": ","\t"," Fluxo : ", fluxo_científico[i][0][0], "+/-", inc_cientifico[i][0][0], "[neutron/cm².s]")
+
 
 
 
