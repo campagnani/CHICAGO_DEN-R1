@@ -615,6 +615,14 @@ class ChigagoDenR1:
 
     def tallies(self,):
         print("################################################")
+        print("###########          Básicos        ############")
+        print("################################################")
+        tally_nu = openmc.Tally(name='nu')
+        tally_nu.scores.append('nu-fission')
+
+        tally_fission = openmc.Tally(name='reaction rate')
+        tally_fission.scores.append('fission')
+        print("################################################")
         print("###########        Mesh Radial      ############")
         print("################################################")
         r_divisions = np.linspace(0.0,self.fronteira_ar_lateral,101).tolist()    
@@ -641,16 +649,17 @@ class ChigagoDenR1:
         #tally_cubico.scores.append('flux')
 
         ############## Coleção de tallies ##############
-        tallies = openmc.Tallies([tally_radial,])# tally_cubico])
+        tallies = openmc.Tallies([tally_radial, tally_fission, tally_nu])# tally_cubico])
         tallies.export_to_xml()
 
         self.run()
 
-        sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
-
         print("################################################")
         print("###########    Trabalhando dados    ############")
         print("################################################")
+
+        sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
+
         # Retirando o keff
         print('')
         keff = sp.keff
@@ -658,35 +667,52 @@ class ChigagoDenR1:
         print('')
 
         # Acesse os resultados do tally radial
+        nu           = sp.get_tally(scores=['nu-fission'])
+        fission      = sp.get_tally(scores=['fission'])
         flux_radial  = sp.get_tally(scores=['flux'], name='MESH_Radial')
         #flux_cubico  = sp.get_tally(scores=['flux'], name='MESH_Cubico')
 
-        flux_rad_mean_shape = flux_radial.mean.shape
-        flux_rad_mean       = flux_radial.mean
-        flux_rad_dev        = flux_radial.std_dev
-        #flux_cub     = flux_cubico.mean
-        #flux_cub_dev = flux_cubico.std_dev
+
+        nu_mean         = nu.mean
+        nu_std_dev      = nu.std_dev
+        fission_mean    = fission.mean
+        fission_std_dev = fission.std_dev
+        flux_rad_mean   = flux_radial.mean
+        flux_rad_dev    = flux_radial.std_dev
+        #flux_cub        = flux_cubico.mean
+        #flux_cub_dev    = flux_cubico.std_dev
+
+        # Normalização
+        P = 8.0000E+06  #(W ou J/s)
+        Q = 2.0E+08  #(eV)
+        v = nu_mean[0][0][0]/fission_mean[0][0][0]
+
+        # Volumes das areas do mesh
+        volume_radial = []
+        for i in range(0, 100):  # Use o número apropriado de intervalos
+            r1 = r_divisions[i]
+            r2 = r_divisions[i + 1]
+            h = z_divisions[1] - z_divisions[0]
+            volume_radial.append(3.14159265359 * (r2**2 - r1**2) * h)
+        
+        # Fator de conversao
+        f = v*P/(1.60218*10**(-19)*Q*keff.nominal_value)
 
         # Retirando o mesh radial
         print('')
         print("Mesh Radial:")
         print('')
 
-        # Volumes das areas do mesh
-        #volume = []
-        #for i in range(0, 100):  # Use o número apropriado de intervalos
-        #    r1 = r_divisions[i]
-        #    r2 = r_divisions[i + 1]
-        #    h = z_divisions[1] - z_divisions[0]
-        #    volume.append(3.14159265359 * (r2**2 - r1**2) * h)
-
+        flux_rad = []
+        flux_dev = []
         for i in range(0,100):
-            fluxo     = flux_rad_mean[i][0][0]
-            fluxo_científico = format(fluxo, '.4e')
-            incerteza = flux_rad_dev[i][0][0]
-            inc_cientifico   = format(incerteza, '.4e')
-            print("  Intervalo ", (self.fronteira_ar_lateral/101)*i,": ","\t"," Fluxo : ", fluxo_científico, "+/-", inc_cientifico, "[neutron/cm².s]")
-
+            fluxo=f*flux_rad_mean[i][0][0]/volume_radial[i]
+            flux_rad.append(fluxo)
+            fluxo_cientifico = format(fluxo, '.4e')
+            incerteza=f*flux_rad_dev[i][0][0]/volume_radial[i]
+            flux_dev.append(incerteza)
+            inc_cientifico = format(incerteza, '.4e')
+            print("  Intervalo ", i,": ","\t"," Fluxo : ", fluxo_cientifico, "+/-", inc_cientifico, "[neutron/cm².s]")
 
 
 
