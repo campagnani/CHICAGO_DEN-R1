@@ -623,7 +623,8 @@ class ChigagoDenR1:
         mesh_radial = openmc.CylindricalMesh(r_grid = (r_divisions), z_grid = (z_divisions))
         mesh_filter_radial = openmc.MeshFilter(mesh_radial)
         tally_radial = openmc.Tally(name='MESH_Radial')
-        #tally_radial.filters.append(mesh_filter_radial, energy_filter)
+        tally_radial.filters.append(mesh_filter_radial)
+        #tally_radial.filters.append(energy_filter)
         tally_radial.scores.append('flux')
 
         #print("################################################")
@@ -658,12 +659,13 @@ class ChigagoDenR1:
 
         # Acesse os resultados do tally radial
         flux_radial  = sp.get_tally(scores=['flux'], name='MESH_Radial')
-        flux_cubico  = sp.get_tally(scores=['flux'], name='MESH_Cubico')
+        #flux_cubico  = sp.get_tally(scores=['flux'], name='MESH_Cubico')
 
-        flux_rad     = flux_radial.mean
-        flux_rad_dev = flux_radial.std_dev
-        flux_cub     = flux_cubico.mean
-        flux_cub_dev = flux_cubico.std_dev
+        flux_rad_mean_shape = flux_radial.mean.shape
+        flux_rad_mean       = flux_radial.mean
+        flux_rad_dev        = flux_radial.std_dev
+        #flux_cub     = flux_cubico.mean
+        #flux_cub_dev = flux_cubico.std_dev
 
         # Retirando o mesh radial
         print('')
@@ -679,11 +681,11 @@ class ChigagoDenR1:
         #    volume.append(3.14159265359 * (r2**2 - r1**2) * h)
 
         for i in range(0,100):
-            fluxo     = flux_rad[i]
-            incerteza = flux_rad_dev[i]
+            fluxo     = flux_rad_mean[i][0][0]
             fluxo_científico = format(fluxo, '.4e')
+            incerteza = flux_rad_dev[i][0][0]
             inc_cientifico   = format(incerteza, '.4e')
-            print("  Intervalo ", (self.fronteira_ar_lateral/101)*i,": ","\t"," Fluxo : ", fluxo_científico[i][0][0], "+/-", inc_cientifico[i][0][0], "[neutron/cm².s]")
+            print("  Intervalo ", (self.fronteira_ar_lateral/101)*i,": ","\t"," Fluxo : ", fluxo_científico, "+/-", inc_cientifico, "[neutron/cm².s]")
 
 
 
