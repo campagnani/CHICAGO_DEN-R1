@@ -627,12 +627,12 @@ class ChigagoDenR1:
         print("################################################")
         r_divisions = np.linspace(0.0,self.fronteira_ar_lateral,101).tolist()    
         z_divisions = [self.fronteira_ar_inferior, self.fronteira_ar_superior,]  
-        #energy_filter = openmc.EnergyFilter([1.0E-05, 1.0, 20.0E+06])
+        energy_filter = openmc.EnergyFilter([1.0E-05, 1.0, 20.0E+06])
         mesh_radial = openmc.CylindricalMesh(r_grid = (r_divisions), z_grid = (z_divisions))
         mesh_filter_radial = openmc.MeshFilter(mesh_radial)
         tally_radial = openmc.Tally(name='MESH_Radial')
         tally_radial.filters.append(mesh_filter_radial)
-        #tally_radial.filters.append(energy_filter)
+        tally_radial.filters.append(energy_filter)
         tally_radial.scores.append('flux')
 
         #print("################################################")
@@ -700,20 +700,40 @@ class ChigagoDenR1:
 
         # Retirando o mesh radial
         print('')
-        print("Mesh Radial:")
+        print("MESH RADIAL:")
         print('')
 
-        flux_rad = []
-        flux_dev = []
-        for i in range(0,100):
-            fluxo=f*flux_rad_mean[i][0][0]/volume_radial[i]
-            flux_rad.append(fluxo)
-            fluxo_cientifico = format(fluxo, '.4e')
-            incerteza=f*flux_rad_dev[i][0][0]/volume_radial[i]
-            flux_dev.append(incerteza)
-            inc_cientifico = format(incerteza, '.4e')
-            print("  Intervalo ", i,": ","\t"," Fluxo : ", fluxo_cientifico, "+/-", inc_cientifico, "[neutron/cm².s]")
+        flux_rad_termico = []  # Vetor para armazenar os resultados quando j = 0
+        flux_dev_termico = []
+        flux_rad_rapido  = []  # Vetor para armazenar os resultados quando j = 1
+        flux_dev_rapido  = []
 
+        for j in range(0,2):   # Grupo termico e rapido
+            flux_rad = []
+            flux_dev = []
+            if j == 0:
+                print("  FLUXO TÉRMICO :")
+            else:
+                print("  FLUXO RÁPIDO :")
+            for i in range(0,100):
+                fluxo=f*flux_rad_mean[i][0][0]/volume_radial[i]
+                flux_rad.append(fluxo)
+                fluxo_cientifico = format(fluxo, '.4e')
+                incerteza=f*flux_rad_dev[i][0][0]/volume_radial[i]
+                flux_dev.append(incerteza)
+                inc_cientifico = format(incerteza, '.4e')
+                if j == 0:
+                    print(" Intervalo ", i,": ","\t", fluxo_cientifico, "+/-", inc_cientifico, "[neutron/cm².s]")
+                else:
+                    print(" Intervalo ", i,": ","\t", fluxo_cientifico, "+/-", inc_cientifico, "[neutron/cm².s]")
+            print()
 
+            # Atribui os resultados aos vetores apropriados com base no valor de j
+            if j == 0:
+                flux_rad_termico = flux_rad
+                flux_dev_termico = flux_dev
+            elif j == 1:
+                flux_rad_rapido = flux_rad
+                flux_dev_rapido = flux_dev
 
         
