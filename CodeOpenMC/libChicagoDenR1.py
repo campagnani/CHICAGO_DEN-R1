@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import openmc
+import numpy as np
 import os
 os.system('clear')
 
@@ -134,12 +135,12 @@ class ChigagoDenR1:
         self.SS304.set_density('g/cm3', 8.0)
 
         self.fonte = openmc.Material(name='Plutonio Berilio')
-        self.fonte.add_nuclide('Pu239',percent=1)
-        self.fonte.add_nuclide('Be7',percent=6)
+        self.fonte.add_nuclide('Pu239', percent=1, percent_type='wo')
+        self.fonte.add_nuclide('Be9', percent=3, percent_type='wo')
         self.fonte.set_density('g/cm3', 15.0)
 
         self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,self.SS304,self.fonte,])
-        self.materiais.cross_sections = '/home/jefferson/git/CHICAGO_DEN-R1/libSubcritica/HDF5/cross_sections.xml' 
+        self.materiais.cross_sections = '/opt/nuclear-data/endfb-viii.0-hdf5/cross_sections.xml' 
         self.materiais.export_to_xml()
         
         #Já definir as cores dos materiais para futuros plots
@@ -204,7 +205,7 @@ class ChigagoDenR1:
         #Tanque:
             #Material: aço inoxidável
             #Dimensões:
-        Tanque_Altura       =	150
+        Tanque_Altura       =	152.5
         Tanque_Diametro     =	122
         Tanque_Espessura    =	1.2
 
@@ -222,12 +223,13 @@ class ChigagoDenR1:
             #Função: definir o arranjo
             #Composição: alumínio
             #Dimensões:
-        Grade_Espessura =   1
-        Grade_Diametro  =   96 #cm CHECAR**************************************************************
+        Grade_Espessura  =   1   # em altura
+        Grade_ressalto   =   0.4 # Altura do ressalto / apoio da barra
+        Grade_Diametro   =   101 #cm 
             #Quantidade: duas.
             #Posicionamento:
                 #Primeira: fundo do tanque
-        Grade_Posicionamento = 28.4        #Segunda: 28,4 cm do fundo do tanque.
+        Grade_Posicionamento = 26.0        # Em relação a grade de baixo (cm)
 
         #Fonte de nêutrons:
             #Composição: Plutônio + Berílio
@@ -238,15 +240,18 @@ class ChigagoDenR1:
         #Variáveis de Dimenções dos planos
         fundo_tanque_inferior = -Tanque_Altura/2
         fundo_tanque_superior = fundo_tanque_inferior + Tanque_Espessura
-        vareta_altura = fundo_tanque_superior + Vareta_combustivel_Comprimento
         lateral_tanque_interna = Tanque_Diametro - (2*Tanque_Espessura)
         altura_tanque          = fundo_tanque_inferior + Tanque_Altura
         nivel_dagua = altura_tanque - 6*2.54
-        grade_inferior = fundo_tanque_superior + 1
-        grade_superior = fundo_tanque_superior + Grade_Posicionamento
+        grade_inferior_down = fundo_tanque_superior + 2.54
+        grade_interior_ressalto = grade_inferior_down + Grade_ressalto
+        grade_inferior_up   = grade_inferior_down + Grade_Espessura
+        grade_superior_down = grade_inferior_up + Grade_Posicionamento
+        grade_superior_up   = grade_superior_down + Grade_Espessura
+        vareta_altura       = grade_interior_ressalto + Vareta_combustivel_Comprimento
 
         ##Planos internos a vareta
-        refletor_interno_superior = fundo_tanque_superior + 6.5*2.54
+        refletor_interno_superior = grade_inferior_down + 6.5*2.54
         suporte_interno_superior = refletor_interno_superior + 0.2
         elemento_combustivel = suporte_interno_superior + Barra_combustivel_Comprimento*5
 
@@ -269,11 +274,15 @@ class ChigagoDenR1:
         #Criação das formas geométricas
 
         # Planos Horizontais
-        plano_grade_superior_1          = openmc.ZPlane(z0=grade_superior,)
-        plano_grade_superior_2          = openmc.ZPlane(z0=grade_superior+Grade_Espessura,)
-        plano_grade_inferior_1          = openmc.ZPlane(z0=grade_inferior,)
-        plano_grade_inferior_2          = openmc.ZPlane(z0=grade_inferior+Grade_Espessura,)
+        plano_grade_superior_1          = openmc.ZPlane(z0=grade_superior_down,)
+        plano_grade_superior_2          = openmc.ZPlane(z0=grade_superior_up,)
+        plano_ressalto_grade            = openmc.ZPlane(z0=grade_interior_ressalto)
+        plano_grade_inferior_1          = openmc.ZPlane(z0=grade_inferior_down,)
+        plano_grade_inferior_2          = openmc.ZPlane(z0=grade_inferior_up,)
         plano_altura_tanque             = openmc.ZPlane(z0=altura_tanque,)
+        plano_beirada_altura_tanque     = openmc.ZPlane(z0=altura_tanque - 1.2)
+        plano_divisao_altura_tanque_sup = openmc.ZPlane(z0=altura_tanque - 76 + 1.2)
+        plano_divisao_altura_tanque_inf = openmc.ZPlane(z0=altura_tanque - 76 - 1.2)
         plano_fundo_tanque_superior     = openmc.ZPlane(z0=fundo_tanque_superior,)
         plano_fundo_tanque_inferior     = openmc.ZPlane(z0=fundo_tanque_inferior,)
         plano_refletor_interno          = openmc.ZPlane(z0=refletor_interno_superior)
@@ -318,16 +327,21 @@ class ChigagoDenR1:
         cilindro_raio_externo_tanque    = openmc.ZCylinder(r=Tanque_Diametro/2)
         cilindro_raio_externo_grade     = openmc.ZCylinder(r=Grade_Diametro/2)
 
+        # Ressalto da grade
+        cilindro_ressalto = openmc.ZCylinder(r=(Vareta_combustivel_Diametro_interno/2+Vareta_combustivel_Espessura)/2-0.2)
+
+        # Beirada externa do tanque
+        cilindro_beirada_tanque = openmc.ZCylinder(r=Tanque_Diametro/2+3.0)
 
         # Células Vareta
         self.celula_moderador1               = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
         self.celula_moderador2               = openmc.Cell(fill=self.moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
         self.celula_moderador3               = openmc.Cell(fill=self.moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
-        self.celula_refletor_interno         = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_refletor_interno&-cilindro_raio_interno_vareta)
+        self.celula_refletor_interno         = openmc.Cell(fill=self.moderador,   region=+plano_ressalto_grade&-plano_refletor_interno&-cilindro_raio_interno_vareta
+                                                          | +plano_grade_inferior_1&-plano_ressalto_grade&-cilindro_ressalto
+                                                          | +plano_fundo_tanque_superior&-plano_grade_inferior_1&-cilindro_raio_externo_vareta)
 
-        self.celula_grade_inferior           = openmc.Cell(fill=self.aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
-        self.celula_grade_superior           = openmc.Cell(fill=self.aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
-        self.celula_clad_vareta              = openmc.Cell(fill=self.aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
+        self.celula_clad_vareta              = openmc.Cell(fill=self.aluminio,    region=+plano_ressalto_grade&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
         self.celula_suporte_interno          = openmc.Cell(fill=self.aluminio,    region=+plano_refletor_interno&-plano_suporte_interno&-cilindro_raio_interno_vareta)
         self.celula_clad_combustivel_interno = openmc.Cell(fill=self.aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+clad_raio_interno_combustivel&-cilindro_raio_interno_combustivel)
         self.celula_clad_combustivel_externo = openmc.Cell(fill=self.aluminio,    region=+plano_suporte_interno&-plano_elemento_combustivel&+cilindro_raio_externo_combustivel&-clad_raio_externo_combustivel)
@@ -354,6 +368,11 @@ class ChigagoDenR1:
         self.celula_clad_8      = openmc.Cell(fill=self.aluminio, region=+plano_clad_comb_11&-plano_clad_comb_12&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
         self.celula_clad_9      = openmc.Cell(fill=self.aluminio, region=+plano_clad_comb_12&-plano_clad_comb_13&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
         self.celula_clad_10     = openmc.Cell(fill=self.aluminio, region=+plano_clad_comb_14&-plano_clad_comb_15&+cilindro_raio_interno_combustivel&-cilindro_raio_externo_combustivel)
+
+        # Celulas grade de espaçamento (construída de cima para baixo)
+        self.celula_ressalto_inferior = openmc.Cell(fill=self.aluminio, region=+plano_grade_inferior_1&-plano_ressalto_grade&+cilindro_ressalto)
+        self.celula_grade_inferior    = openmc.Cell(fill=self.aluminio, region=+plano_ressalto_grade&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)        
+        self.celula_grade_superior    = openmc.Cell(fill=self.aluminio, region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)        
 
         ####################################################################################################################################
         ############################### Celulas e superfícies específicas para o Universo Vareta Central (fonte)############################
@@ -401,7 +420,7 @@ class ChigagoDenR1:
                                                 self.celula_fonte,self.celula_clad_fonte,self.celula_refletor_lateral_fonte,
                                                 self.celula_refletor_superior_fonte,self.celula_ar_externo_vareta_fonte,
                                                 self.celula_grade_superior_fonte, self.celula_grade_inferior_fonte,self.celula_ar_superior_interno_fonte,
-                                                self.celula_moderador1_fonte, self.celula_moderador2_fonte, self.celula_moderador3_fonte))  # Identidade da fonte
+                                                self.celula_moderador1_fonte, self.celula_moderador2_fonte, self.celula_moderador3_fonte,))  # Identidade da fonte
         
         ####################################################################################################################################
         ####################################################################################################################################
@@ -442,7 +461,7 @@ class ChigagoDenR1:
                                                                 self.celula_ar_superior_interno, self.celula_clad_combustivel_interno,self.celula_clad_combustivel_externo,
                                                                 self.celula_clad_1, self.celula_clad_2,self.celula_clad_3,self.celula_clad_4,self.celula_clad_5,self.celula_clad_6,self.celula_clad_7,
                                                                 self.celula_clad_8,self.celula_clad_9,self.celula_clad_10,self.celula_clad_bottom,self.celula_ar_externo_vareta,
-                                                                self.celula_grade_superior, self.celula_grade_inferior))
+                                                                self.celula_grade_superior, self.celula_grade_inferior, self.celula_ressalto_inferior))
 
         #self.universo_vareta_central         = openmc.Universe(cells=(self.celula_vareta,self.celula_refletor_fonte,self.celula_suporte_interno_fonte, \
         #                                                         self.celula_moderador_interno_fonte, self.celula_moderador))
@@ -491,19 +510,28 @@ class ChigagoDenR1:
         #Tanque
         self.celula_refletor = openmc.Cell(fill=self.moderador, region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&+cilindro_raio_externo_grade&-cilindro_raio_interno_tanque)
         self.celula_ar_externo_matriz = openmc.Cell(fill=self.ar, region=+plano_refletor_lateral_superior&-plano_altura_tanque&+cilindro_raio_externo_grade&-cilindro_raio_interno_tanque)
-        self.celula_tanque   = openmc.Cell(fill=self.SS304, region=+cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_fundo_tanque_superior&-plano_altura_tanque
-                                                                | +plano_fundo_tanque_inferior&-plano_fundo_tanque_superior&-cilindro_raio_externo_tanque)
+        self.celula_tanque   = openmc.Cell(fill=self.SS304, region=+cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_fundo_tanque_superior&-plano_divisao_altura_tanque_inf
+                                                                | +cilindro_raio_interno_tanque&-cilindro_beirada_tanque&+plano_divisao_altura_tanque_inf&-plano_divisao_altura_tanque_sup
+                                                                | +cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_divisao_altura_tanque_sup&-plano_beirada_altura_tanque
+                                                                | +plano_fundo_tanque_inferior&-plano_fundo_tanque_superior&-cilindro_raio_externo_tanque
+                                                                | +plano_beirada_altura_tanque&-plano_altura_tanque&+cilindro_raio_interno_tanque&-cilindro_beirada_tanque)
 
         self.celula_ar_interna_tanque = openmc.Cell(fill=self.ar, region=-cilindro_raio_interno_tanque&+plano_vareta_altura&-plano_altura_tanque)
 
         # Boundary conditions
         fronteira = 10
-        cilindro_boundary        = openmc.ZCylinder (r=Tanque_Diametro/2 + fronteira, boundary_type='vacuum')
-        plano_superior_boundary  = openmc.ZPlane    (z0=altura_tanque + fronteira, boundary_type='vacuum')
-        plano_inferior_boundary  = openmc.ZPlane    (z0=fundo_tanque_inferior - fronteira, boundary_type='vacuum')
+        self.fronteira_ar_lateral = Tanque_Diametro/2 + fronteira
+        self.fronteira_ar_superior = altura_tanque + fronteira
+        self.fronteira_ar_inferior = fundo_tanque_inferior - fronteira
+        cilindro_boundary        = openmc.ZCylinder (r=self.fronteira_ar_lateral, boundary_type='vacuum')
+        plano_superior_boundary  = openmc.ZPlane    (z0=self.fronteira_ar_superior, boundary_type='vacuum')
+        plano_inferior_boundary  = openmc.ZPlane    (z0=self.fronteira_ar_inferior, boundary_type='vacuum')
 
         self.celula_ar_externa_tanque = openmc.Cell(fill=self.ar, region=-cilindro_boundary&-plano_superior_boundary&+plano_altura_tanque
-                                                            | -cilindro_boundary&+cilindro_raio_externo_tanque&-plano_altura_tanque&+plano_fundo_tanque_inferior
+                                                            | -cilindro_boundary&+cilindro_beirada_tanque&+plano_beirada_altura_tanque&-plano_altura_tanque
+                                                            | -cilindro_boundary&+cilindro_raio_externo_tanque&-plano_beirada_altura_tanque&+plano_divisao_altura_tanque_sup
+                                                            | -cilindro_boundary&+cilindro_beirada_tanque&-plano_divisao_altura_tanque_sup&+plano_divisao_altura_tanque_inf
+                                                            | -cilindro_boundary&+cilindro_raio_externo_tanque&-plano_divisao_altura_tanque_inf&+plano_fundo_tanque_inferior
                                                             | -cilindro_boundary&-plano_fundo_tanque_inferior&+plano_inferior_boundary)
 
         # Universo outer
@@ -584,3 +612,73 @@ class ChigagoDenR1:
             print("###########        Executando       ############")
             print("################################################")
             openmc.run()
+
+    def tallyMesh(self,):
+        print("################################################")
+        print("###########        Mesh Radial      ############")
+        print("################################################")
+        r_divisions = np.linspace(0.0,self.fronteira_ar_lateral,101).tolist()    
+        z_divisions = [self.fronteira_ar_inferior, self.fronteira_ar_superior,]  
+        #energy_filter = openmc.EnergyFilter([1.0E-05, 1.0, 20.0E+06])
+        mesh_radial = openmc.CylindricalMesh(r_grid = (r_divisions), z_grid = (z_divisions))
+        mesh_filter_radial = openmc.MeshFilter(mesh_radial)
+        tally_radial = openmc.Tally(name='MESH_Radial')
+        tally_radial.filters.append([mesh_filter_radial]) #, energy_filter])
+        tally_radial.scores.append('flux')
+
+        #print("################################################")
+        #print("###########        Mesh Cubico      ############")
+        #print("################################################")
+        #x_divisions = np.linspace(-self.fronteira_ar_lateral,self.fronteira_ar_lateral,101).tolist()
+        #y_divisions = np.linspace(-self.fronteira_ar_lateral,self.fronteira_ar_lateral,101).tolist()  
+        #z_divisions = np.linspace( self.fronteira_ar_inferior,self.fronteira_ar_superior,101).tolist() 
+        #energy_filter = openmc.EnergyFilter([1.0E-05, 1, 20E+06]) 
+        #mesh_cubico = openmc.RectilinearMesh(x_grid = (x_divisions), y_grid = (y_divisions), z_grid = (z_divisions))
+        #mesh_filter_cubico = openmc.MeshFilter(mesh_cubico, energy_filter)
+        #tally_cubico = openmc.Tally(name='MESH_Cubico')
+        #tally_cubico.filters.append(mesh_filter_cubico)
+        #tally_cubico.scores.append('flux')
+
+        ############## Coleção de tallies ##############
+        tallies = openmc.Tallies([tally_radial,])# tally_cubico])
+        tallies.export_to_xml()
+
+        self.run()
+
+        sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
+
+        print("################################################")
+        print("###########    Trabalhando dados    ############")
+        print("################################################")
+        # Retirando o keff
+        print('')
+        keff = sp.keff
+        print("\t" , " keff (valor combinado de abs/col/t.length) :",keff, "[neutrons/source]")
+        print('')
+
+        # Acesse os resultados do tally radial
+        flux   = sp.get_tally(scores=['flux'])
+
+        flux_meanshape = flux.mean.shape
+        flux_mean      = flux.mean
+        flux_std_dev   = flux.std_dev
+
+        # Retirando o mesh radial
+        print('')
+        print("Mesh Radial:")
+        print('')
+
+        # Volumes das areas do mesh
+        #volume = []
+        #for i in range(0, 100):  # Use o número apropriado de intervalos
+        #    r1 = r_divisions[i]
+        #    r2 = r_divisions[i + 1]
+        #    h = z_divisions[1] - z_divisions[0]
+        #    volume.append(3.14159265359 * (r2**2 - r1**2) * h)
+
+        for i in range(0,100):
+            print("  Intervalo ", (self.fronteira_ar_lateral/101)*i,": ","\t"," Fluxo : ", flux_mean[i], "+/-", flux_std_dev[i], "[neutron/cm².s]")
+
+
+
+        

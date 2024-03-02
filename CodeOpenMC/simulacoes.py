@@ -36,3 +36,8 @@ chicago.run()
 libChicagoDenR1.mkdir(voltar=True, nome="fonte", data=False)
 chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=10000, ciclos=220, inativo=20, fonte=True)
 chicago.run()
+
+#Calcular Mechs
+libChicagoDenR1.mkdir(voltar=False, nome="tallyMesh", data=False)
+chicago = libChicagoDenR1.ChigagoDenR1(fonte=True, particulas=100,ciclos=1)
+chicago.tallyMesh()

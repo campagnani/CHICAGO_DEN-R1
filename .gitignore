@@ -1,5 +1,6 @@
 #Arquivos gerados pelo OpenMC
 CodeOpenMC/**/*.h5
+CodeOpenMC/**/*.out
 CodeOpenMC/**/*.png
 CodeOpenMC/**/*.xml
 CodeOpenMC/**/__pycache__
