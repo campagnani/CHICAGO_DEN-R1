@@ -1,6 +1,6 @@
 openmc@nuclear206   #16
 openmc@nuclear205   #8
-openmc@nuclear212   #6
-openmc@nuclear213   #8
+#openmc@nuclear212   #6
+#openmc@nuclear213   #8
 #openmc@nuclear214  #8
 #openmc@nuclear215  #8

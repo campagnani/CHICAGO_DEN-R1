@@ -602,18 +602,31 @@ class ChigagoDenR1:
         self.ciclos = ciclos
         print(self.settings)
 
-    def run(self,mpi=0):
-        if(mpi!=0):
+    def copyXML(id=None):
+        if id != None:
+            print("Copiando arquivos *.xml para openmc@" + id + ":")
+            os.system("scp *.xml openmc@" + id + ":/home/openmc")
+            
+    def run(self, nodesMPI=0, hostfile=None, hosts=None):
+        if(nodesMPI!=0):
             print("################################################")
             print("###########    Executando com MPI   ############")
             print("################################################")
-            print("Copiando arquivos *.xml para jefferson@nuclear205:")
-            os.system("scp *.xml jefferson@nuclear205:/home/jefferson")
-            print("Copiando arquivos *.xml para openmc@nuclear212:")
-            os.system("scp *.xml openmc@nuclear212:/home/openmc")
-            print("Copiando arquivos *.xml para openmc@nuclear213:")
-            os.system("scp *.xml openmc@nuclear213:/home/openmc")
-            openmc.run(mpi_args=['mpiexec', '-n', str(mpi), '--hostfile',"./hostfile.txt"])
+            
+            mpi_args=['mpiexec']
+            
+            if nodesMPI!=None:
+                mpi_args+=['-n', str(nodesMPI)]
+            
+            if hostfile!=None:
+                mpi_args+=['--hostfile', hostfile]
+            
+            if hosts!=None:
+                mpi_args+=['--host', hosts]
+                for host in hosts:
+                    self.copyXML(host)
+            
+            openmc.run(mpi_args=mpi_args)
         else:
             print("################################################")
             print("###########        Executando       ############")
