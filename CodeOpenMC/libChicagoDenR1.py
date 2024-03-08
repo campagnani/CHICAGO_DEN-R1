@@ -596,6 +596,7 @@ class ChigagoDenR1:
         else:
             self.settings.inactive = inativo
             self.settings.source = openmc.Source(space=openmc.stats.Point())
+        self.settings.output = {'tallies': False}
         self.settings.export_to_xml()
         #Faça ciclos ser acessada de fora
         self.ciclos = ciclos
@@ -606,7 +607,13 @@ class ChigagoDenR1:
             print("################################################")
             print("###########    Executando com MPI   ############")
             print("################################################")
-            openmc.run(mpi_args=['mpiexec', '-n', str(mpi)])
+            print("Copiando arquivos *.xml para jefferson@nuclear205:")
+            os.system("scp *.xml jefferson@nuclear205:/home/jefferson")
+            print("Copiando arquivos *.xml para openmc@nuclear212:")
+            os.system("scp *.xml openmc@nuclear212:/home/openmc")
+            print("Copiando arquivos *.xml para openmc@nuclear213:")
+            os.system("scp *.xml openmc@nuclear213:/home/openmc")
+            openmc.run(mpi_args=['mpiexec', '-n', str(mpi), '--hostfile',"./hostfile.txt"])
         else:
             print("################################################")
             print("###########        Executando       ############")
