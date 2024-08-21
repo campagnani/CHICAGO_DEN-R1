@@ -4,6 +4,7 @@ from datetime import datetime
 import openmc
 import numpy as np
 import os
+import math
 os.system('clear')
 
 
@@ -591,11 +592,12 @@ class ChigagoDenR1:
         self.settings.batches = ciclos
         self.settings.create_delayed_neutrons = atrasados
         if fonte:
+            self.settings.source = openmc.IndependentSource(domains=openmc.Material(self.fonte))
             self.settings.inactive = 0
             self.settings.run_mode = 'fixed source'
         else:
             self.settings.inactive = inativo
-            self.settings.source = openmc.Source(space=openmc.stats.Point())
+            self.settings.source = openmc.IndependentSource(space=openmc.stats.Point())
         self.settings.output = {'tallies': False}
         self.settings.export_to_xml()
         #Faça ciclos ser acessada de fora
