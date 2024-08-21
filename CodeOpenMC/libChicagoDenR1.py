@@ -609,31 +609,11 @@ class ChigagoDenR1:
             print("Copiando arquivos *.xml para openmc@" + id + ":")
             os.system("scp *.xml openmc@" + id + ":/home/openmc")
             
-    def run(self, nodesMPI=0, hostfile=None, hosts=None):
-        if(nodesMPI!=0):
-            print("################################################")
-            print("###########    Executando com MPI   ############")
-            print("################################################")
-            
-            mpi_args=['mpiexec']
-            
-            if nodesMPI!=None:
-                mpi_args+=['-n', str(nodesMPI)]
-            
-            if hostfile!=None:
-                mpi_args+=['--hostfile', hostfile]
-            
-            if hosts!=None:
-                mpi_args+=['--host', hosts]
-                for host in hosts:
-                    self.copyXML(host)
-            
-            openmc.run(mpi_args=mpi_args)
-        else:
-            print("################################################")
-            print("###########        Executando       ############")
-            print("################################################")
-            openmc.run()
+    def run(self):
+        print("################################################")
+        print("###########        Executando       ############")
+        print("################################################")
+        openmc.run()
 
     def tallies(self,):
         print("################################################")
