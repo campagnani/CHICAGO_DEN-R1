@@ -12,20 +12,18 @@ import libChicagoDenR1
 libChicagoDenR1.mkdir(voltar=False, nome="resultados", data=True)
 
 # Plotar 2D em 3 vistas e plotar em 3D *SEM FONTE*
-libChicagoDenR1.mkdir(voltar=False, nome="Plots_sem_fonte", data=False)
-chicago = libChicagoDenR1.ChigagoDenR1(fonte=False)
-chicago.plot2D_secao_transversal('xy',origin=(0,0,-72.5))
-chicago.plot2D_secao_transversal('yz')
-chicago.plot2D_secao_transversal('xz')
-chicago.plot3D()
+#libChicagoDenR1.mkdir(voltar=False, nome="Plots_sem_fonte", data=False)
+#chicago = libChicagoDenR1.ChigagoDenR1(fonte=False)
+#chicago.plot2D_secao_transversal('xy',origin=(0,0,-72.5))
+#chicago.plot2D_secao_transversal('yz')
+#chicago.plot2D_secao_transversal('xz')
 
 # Plotar 2D em 3 vistas e plotar em 3D *COM FONTE*
-libChicagoDenR1.mkdir(voltar=True, nome="Plots_com_fonte", data=False)
-chicago = libChicagoDenR1.ChigagoDenR1(fonte=True)
-chicago.plot2D_secao_transversal('xy')
-chicago.plot2D_secao_transversal('yz')
-chicago.plot2D_secao_transversal('xz')
-chicago.plot3D()
+#libChicagoDenR1.mkdir(voltar=True, nome="Plots_com_fonte", data=False)
+#chicago = libChicagoDenR1.ChigagoDenR1(fonte=True)
+#chicago.plot2D_secao_transversal('xy')
+#chicago.plot2D_secao_transversal('yz')
+#chicago.plot2D_secao_transversal('xz')
 
 ## Calcular Keff
 #libChicagoDenR1.mkdir(voltar=True, nome="keff", data=False)
@@ -33,12 +31,12 @@ chicago.plot3D()
 #chicago.tallies()
 #chicago.run()
 ##
-## Operaçao com fonte fixa
-#libChicagoDenR1.mkdir(voltar=True, nome="fonte", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=10000, ciclos=220, inativo=20, fonte=True)
+# Operaçao com fonte fixa
+#libChicagoDenR1.mkdir(voltar=False, nome="fonte", data=False)
+#chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=1000, ciclos=100, fonte=True)
 #chicago.run()
 
 #Calcular Mechs
-#libChicagoDenR1.mkdir(voltar=False, nome="tallyMesh", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(fonte=True, particulas=100,ciclos=1)
-#chicago.tallyMesh()
+libChicagoDenR1.mkdir(voltar=False, nome="tallyMesh", data=False)
+chicago = libChicagoDenR1.ChigagoDenR1(fonte=True, particulas=1000,ciclos=100)
+chicago.tallies()

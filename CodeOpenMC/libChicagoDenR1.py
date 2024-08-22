@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import openmc
+import openmc.stats
 import numpy as np
 import os
 import math
@@ -70,13 +71,13 @@ class ChigagoDenR1:
         print("############          U_nat          ###########")
         print("################################################")
 
-        self.combustivel = openmc.Material(name='Uránio Natural')
+        self.combustivel = openmc.Material(name='Uránio Natural', material_id=1)
         self.combustivel.add_nuclide('U234', 5.50000E-05, percent_type='ao')
         self.combustivel.add_nuclide('U235', 7.20000E-03, percent_type='ao')
         self.combustivel.add_nuclide('U238', 9.92745E-01, percent_type='ao')
         self.combustivel.set_density('g/cm3', densidadeCombustivel)
 
-        self.moderador = openmc.Material(name='Água Leve')
+        self.moderador = openmc.Material(name='Água Leve', material_id=2)
         self.moderador.add_nuclide('H1' , 1.1187E-01 , percent_type='wo')
         self.moderador.add_nuclide('H2' , 3.3540E-05 , percent_type='wo')
         self.moderador.add_nuclide('O16', 8.8574E-01 , percent_type='wo')
@@ -84,7 +85,7 @@ class ChigagoDenR1:
         self.moderador.add_nuclide('O18', 1.9982E-03 , percent_type='wo')
         self.moderador.set_density('g/cm3', densidadeModerador)
         
-        self.ar = openmc.Material(name='Ar')
+        self.ar = openmc.Material(name='Ar', material_id=3)
         self.ar.add_nuclide('N14' , 7.7826E-01 , percent_type='ao')
         self.ar.add_nuclide('N15' , 2.8589E-03 , percent_type='ao')
         self.ar.add_nuclide('O16' , 1.0794E-01 , percent_type='ao')
@@ -95,11 +96,11 @@ class ChigagoDenR1:
         self.ar.add_nuclide('Ar40', 3.2467E-03 , percent_type='ao')
         self.ar.set_density('g/cm3', 0.001225)
 
-        self.aluminio = openmc.Material(name='Alúminio')
+        self.aluminio = openmc.Material(name='Alúminio', material_id=4)
         self.aluminio.add_nuclide('Al27', 1 , percent_type ='wo')
         self.aluminio.set_density('g/cm3', 2.7)
 
-        self.SS304 = openmc.Material(name='Aço INOX')
+        self.SS304 = openmc.Material(name='Aço INOX', material_id=5)
         self.SS304.add_nuclide('C12',   2.9639E-04, percent_type = 'wo')
         self.SS304.add_nuclide('C13',   3.6051E-06, percent_type = 'wo')
         self.SS304.add_nuclide('N14',   9.9608E-04, percent_type = 'wo')
@@ -135,7 +136,7 @@ class ChigagoDenR1:
         self.SS304.add_nuclide('Mo100', 2.5073E-03, percent_type = 'wo')
         self.SS304.set_density('g/cm3', 8.0)
 
-        self.fonte = openmc.Material(name='Plutonio Berilio')
+        self.fonte = openmc.Material(name='Plutonio Berilio', material_id=6)
         self.fonte.add_nuclide('Pu239', percent=1, percent_type='wo')
         self.fonte.add_nuclide('Be9', percent=3, percent_type='wo')
         self.fonte.set_density('g/cm3', 15.0)
@@ -235,21 +236,34 @@ class ChigagoDenR1:
         #Fonte de nêutrons:
             #Composição: Plutônio + Berílio
             #Localização: Vareta central
+            #80g de plutonio total
+            #Atividade de 5 curie total
+            #3 cilindros de aço inox com plutônio-berilio
+            #Colocados dentro de recipiente aluminio 3 cm e 20cm
+            #
+            #Atividades cada mini-cilindro:
+            # 1.87 * 10^6
+            # 3.53 * 10^6
+            # 3.86 * 10^6
 
         #Diâmetro médio do núcleo: 800 mm
 
+        ###
+        ###
+        ###
+
         #Variáveis de Dimenções dos planos
-        fundo_tanque_inferior = -Tanque_Altura/2
-        fundo_tanque_superior = fundo_tanque_inferior + Tanque_Espessura
-        lateral_tanque_interna = Tanque_Diametro - (2*Tanque_Espessura)
-        altura_tanque          = fundo_tanque_inferior + Tanque_Altura
-        nivel_dagua = altura_tanque - 6*2.54
-        grade_inferior_down = fundo_tanque_superior + 2.54
+        fundo_tanque_inferior   = -Tanque_Altura/2
+        fundo_tanque_superior   = fundo_tanque_inferior + Tanque_Espessura
+        lateral_tanque_interna  = Tanque_Diametro - (2*Tanque_Espessura)
+        altura_tanque           = fundo_tanque_inferior + Tanque_Altura
+        nivel_dagua             = altura_tanque - 6*2.54
+        grade_inferior_down     = fundo_tanque_superior + 2.54
         grade_interior_ressalto = grade_inferior_down + Grade_ressalto
-        grade_inferior_up   = grade_inferior_down + Grade_Espessura
-        grade_superior_down = grade_inferior_up + Grade_Posicionamento
-        grade_superior_up   = grade_superior_down + Grade_Espessura
-        vareta_altura       = grade_interior_ressalto + Vareta_combustivel_Comprimento
+        grade_inferior_up       = grade_inferior_down + Grade_Espessura
+        grade_superior_down     = grade_inferior_up + Grade_Posicionamento
+        grade_superior_up       = grade_superior_down + Grade_Espessura
+        vareta_altura           = grade_interior_ressalto + Vareta_combustivel_Comprimento
 
         ##Planos internos a vareta
         refletor_interno_superior = grade_inferior_down + 6.5*2.54
@@ -382,19 +396,19 @@ class ChigagoDenR1:
         ##Planos internos a vareta central
         suporte_interno_central = fundo_tanque_superior + 5*2.54
         refletor_inferior_interno_central = suporte_interno_central - 0.2
-        limite_fonte_inferior              = suporte_interno_central + 0.1
-        limite_fonte_superior              = suporte_interno_central + 19.9
+        self.limite_fonte_inferior              = suporte_interno_central + 0.1
+        self.limite_fonte_superior              = suporte_interno_central + 19.9
         limite_clad_fonte_superior        = suporte_interno_central + 20
-        diametro_cilindro_fonte = 2.9 # cm
+        self.diametro_cilindro_fonte = 2.9 # cm
         diametro_clad_fonte     = 3.0 # cm
 
         plano_superior_suporte_fonte = openmc.ZPlane(z0=suporte_interno_central)
         plano_inferior_suporte_fonte = openmc.ZPlane(z0=refletor_inferior_interno_central)
-        plano_superior_fonte         = openmc.ZPlane(z0=limite_fonte_superior)
-        plano_inferior_fonte         = openmc.ZPlane(z0=limite_fonte_inferior)
+        plano_superior_fonte         = openmc.ZPlane(z0=self.limite_fonte_superior)
+        plano_inferior_fonte         = openmc.ZPlane(z0=self.limite_fonte_inferior)
         plano_clad_fonte_superior    = openmc.ZPlane(z0=limite_clad_fonte_superior)
 
-        superficie_radial_fonte      = openmc.ZCylinder(r=diametro_cilindro_fonte/2)
+        superficie_radial_fonte      = openmc.ZCylinder(r=self.diametro_cilindro_fonte/2)
         superficie_radial_clad_fonte = openmc.ZCylinder(r=diametro_clad_fonte/2)
 
         self.celula_refletor_inferior_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_inferior_suporte_fonte&-cilindro_raio_interno_vareta)
@@ -592,9 +606,20 @@ class ChigagoDenR1:
         self.settings.batches = ciclos
         self.settings.create_delayed_neutrons = atrasados
         if fonte:
-            self.settings.source = openmc.IndependentSource(domains=openmc.Material(self.fonte))
+            self.atividade = 9.26 * 10**6
+            space = openmc.stats.CylindricalIndependent(
+                r=openmc.stats.Uniform(0, self.diametro_cilindro_fonte/2),
+                phi=openmc.stats.Uniform(0, 2 * np.pi),
+                z=openmc.stats.Uniform(self.limite_fonte_inferior, self.limite_fonte_superior),
+                origin=(0.0, 0.0, 0)
+            )
+            angle = openmc.stats.Isotropic()
+            energy = openmc.stats.Discrete([14e6], [1.0])
+            #time = openmc.stats.Uniform(0, self.atividade)
+            self.settings.source = openmc.IndependentSource(space=space,angle=angle,energy=energy)#,time=time)
             self.settings.inactive = 0
             self.settings.run_mode = 'fixed source'
+
         else:
             self.settings.inactive = inativo
             self.settings.source = openmc.IndependentSource(space=openmc.stats.Point())
@@ -603,11 +628,6 @@ class ChigagoDenR1:
         #Faça ciclos ser acessada de fora
         self.ciclos = ciclos
         print(self.settings)
-
-    def copyXML(id=None):
-        if id != None:
-            print("Copiando arquivos *.xml para openmc@" + id + ":")
-            os.system("scp *.xml openmc@" + id + ":/home/openmc")
             
     def run(self):
         print("################################################")
@@ -655,85 +675,153 @@ class ChigagoDenR1:
         tallies.export_to_xml()
 
         self.run()
+        if self.fonte:
+            print("################################################")
+            print("###########    Trabalhando dados com fonte   ############")
+            print("################################################")
+            sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
 
-        print("################################################")
-        print("###########    Trabalhando dados    ############")
-        print("################################################")
-
-        sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
-
-        # Retirando o keff
-        print('')
-        keff = sp.keff
-        print("\t" , " keff (valor combinado de abs/col/t.length) :",keff, "[neutrons/source]")
-        print('')
-
-        # Acesse os resultados do tally radial
-        nu           = sp.get_tally(scores=['nu-fission'])
-        fission      = sp.get_tally(scores=['fission'])
-        flux_radial  = sp.get_tally(scores=['flux'], name='MESH_Radial')
-        #flux_cubico  = sp.get_tally(scores=['flux'], name='MESH_Cubico')
+            # Acesse os resultados do tally radial
+            nu           = sp.get_tally(scores=['nu-fission'])
+            fission      = sp.get_tally(scores=['fission'])
+            flux_radial  = sp.get_tally(scores=['flux'], name='MESH_Radial')
+            #flux_cubico  = sp.get_tally(scores=['flux'], name='MESH_Cubico')
 
 
-        nu_mean         = nu.mean
-        nu_std_dev      = nu.std_dev
-        fission_mean    = fission.mean
-        fission_std_dev = fission.std_dev
-        flux_rad_mean   = flux_radial.mean
-        flux_rad_dev    = flux_radial.std_dev
-        #flux_cub        = flux_cubico.mean
-        #flux_cub_dev    = flux_cubico.std_dev
+            nu_mean         = nu.mean
+            nu_std_dev      = nu.std_dev
+            fission_mean    = fission.mean
+            fission_std_dev = fission.std_dev
+            flux_rad_mean   = flux_radial.mean
+            flux_rad_dev    = flux_radial.std_dev
+            #flux_cub        = flux_cubico.mean
+            #flux_cub_dev    = flux_cubico.std_dev
 
-        # Normalização
-        P = 8.0000E+06  #(W ou J/s)
-        Q = 2.0E+08  #(eV)
-        v = nu_mean[0][0][0]/fission_mean[0][0][0]
+            # Retirando o mesh radial
+            print('')
+            print("MESH RADIAL:")
+            print('')
+            
+            flux_rad_termico = []  # Vetores para armazenar resultados
+            flux_dev_termico = []
+            flux_rad_rapido  = []  
+            flux_dev_rapido  = []
 
-        # Volumes das areas do mesh
-        volume_radial = []
-        for i in range(0, 100):  # Use o número apropriado de intervalos
-            r1 = r_divisions[i]
-            r2 = r_divisions[i + 1]
-            h = z_divisions[1] - z_divisions[0]
-            volume_radial.append(3.14159265359 * (r2**2 - r1**2) * h)
-        
-        # Fator de conversao
-        f = v*P/(1.60218*10**(-19)*Q*keff.nominal_value)
+            # Volumes das areas do mesh
+            volume_radial = []
+            for i in range(0, 100):  # Use o número apropriado de intervalos
+                r1 = r_divisions[i]
+                r2 = r_divisions[i + 1]
+                h = z_divisions[1] - z_divisions[0]
+                volume_radial.append(3.14159265359 * (r2**2 - r1**2) * h)
 
-        # Retirando o mesh radial
-        print('')
-        print("MESH RADIAL:")
-        print('')
+            # Fluxo em intervalo térmico e rápido
+            for i in range(0,200):
+                if i % 2 == 0 and i // 2 < len(volume_radial):  # Pegando os elementos pares ou fluxo térmico
+                    index = i // 2
+                    fluxo_par=self.atividade*flux_rad_mean[i][0][0]/volume_radial[index]
+                    fluxo_cientifico = format(fluxo_par, '.4e')
+                    flux_rad_termico.append(fluxo_cientifico)
+                    incerteza_par=self.atividade*flux_rad_dev[i][0][0]/volume_radial[index]
+                    inc_cientifico = format(incerteza_par, '.4e')
+                    flux_dev_termico.append(inc_cientifico)
+                elif i % 2 != 0 and i // 2 < len(volume_radial):  # Pegando os elementos ímpares ou fluxo rápido
+                    index = i // 2
+                    fluxo_impar=self.atividade*flux_rad_mean[i][0][0]/volume_radial[index]
+                    fluxo_cientifico = format(fluxo_impar, '.4e')
+                    flux_rad_rapido.append(fluxo_cientifico)
+                    incerteza_impar=self.atividade*flux_rad_dev[i][0][0]/volume_radial[index]
+                    inc_cientifico = format(incerteza_impar, '.4e')
+                    flux_dev_rapido.append(inc_cientifico)
 
-        flux_rad_termico = []  # Vetores para armazenar resultados
-        flux_dev_termico = []
-        flux_rad_rapido  = []  
-        flux_dev_rapido  = []
+            print("  FLUXO TÉRMICO :")
+            for i in range(0,100):
+                print(" Intervalo ", i,": ","\t", flux_rad_termico[i], "+/-", flux_dev_termico[i], "[neutron/cm².s]")
+            print('')
+            print("  FLUXO RÁPIDO :")
+            for i in range(0,100):
+                print(" Intervalo ", i,": ","\t", flux_rad_rapido[i], "+/-", flux_dev_rapido[i], "[neutron/cm².s]")
 
-        # Fluxo em intervalo térmico e rápido
-        for i in range(0,200):
-            if i % 2 == 0 and i // 2 < len(volume_radial):  # Pegando os elementos pares ou fluxo térmico
-                index = i // 2
-                fluxo_par=f*flux_rad_mean[i][0][0]/volume_radial[index]
-                fluxo_cientifico = format(fluxo_par, '.4e')
-                flux_rad_termico.append(fluxo_cientifico)
-                incerteza_par=f*flux_rad_dev[i][0][0]/volume_radial[index]
-                inc_cientifico = format(incerteza_par, '.4e')
-                flux_dev_termico.append(inc_cientifico)
-            elif i % 2 != 0 and i // 2 < len(volume_radial):  # Pegando os elementos ímpares ou fluxo rápido
-                index = i // 2
-                fluxo_impar=f*flux_rad_mean[i][0][0]/volume_radial[index]
-                fluxo_cientifico = format(fluxo_impar, '.4e')
-                flux_rad_rapido.append(fluxo_cientifico)
-                incerteza_impar=f*flux_rad_dev[i][0][0]/volume_radial[index]
-                inc_cientifico = format(incerteza_impar, '.4e')
-                flux_dev_rapido.append(inc_cientifico)
 
-        print("  FLUXO TÉRMICO :")
-        for i in range(0,100):
-            print(" Intervalo ", i,": ","\t", flux_rad_termico[i], "+/-", flux_dev_termico[i], "[neutron/cm².s]")
-        print('')
-        print("  FLUXO RÁPIDO :")
-        for i in range(0,100):
-            print(" Intervalo ", i,": ","\t", flux_rad_rapido[i], "+/-", flux_dev_rapido[i], "[neutron/cm².s]")
+        else:
+            print("################################################")
+            print("###########    Trabalhando dados    ############")
+            print("################################################")
+
+            sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
+
+            # Retirando o keff
+            print('')
+            keff = sp.keff
+            print("\t" , " keff (valor combinado de abs/col/t.length) :",keff, "[neutrons/source]")
+            print('')
+
+            # Acesse os resultados do tally radial
+            nu           = sp.get_tally(scores=['nu-fission'])
+            fission      = sp.get_tally(scores=['fission'])
+            flux_radial  = sp.get_tally(scores=['flux'], name='MESH_Radial')
+            #flux_cubico  = sp.get_tally(scores=['flux'], name='MESH_Cubico')
+
+
+            nu_mean         = nu.mean
+            nu_std_dev      = nu.std_dev
+            fission_mean    = fission.mean
+            fission_std_dev = fission.std_dev
+            flux_rad_mean   = flux_radial.mean
+            flux_rad_dev    = flux_radial.std_dev
+            #flux_cub        = flux_cubico.mean
+            #flux_cub_dev    = flux_cubico.std_dev
+
+            # Normalização
+            P = 8.0000E+06  #(W ou J/s)
+            Q = 2.0E+08  #(eV)
+            v = nu_mean[0][0][0]/fission_mean[0][0][0]
+
+            # Volumes das areas do mesh
+            volume_radial = []
+            for i in range(0, 100):  # Use o número apropriado de intervalos
+                r1 = r_divisions[i]
+                r2 = r_divisions[i + 1]
+                h = z_divisions[1] - z_divisions[0]
+                volume_radial.append(3.14159265359 * (r2**2 - r1**2) * h)
+            
+            # Fator de conversao
+            f = v*P/(1.60218*10**(-19)*Q*keff.nominal_value)
+
+            # Retirando o mesh radial
+            print('')
+            print("MESH RADIAL:")
+            print('')
+
+            flux_rad_termico = []  # Vetores para armazenar resultados
+            flux_dev_termico = []
+            flux_rad_rapido  = []  
+            flux_dev_rapido  = []
+
+            # Fluxo em intervalo térmico e rápido
+            for i in range(0,200):
+                if i % 2 == 0 and i // 2 < len(volume_radial):  # Pegando os elementos pares ou fluxo térmico
+                    index = i // 2
+                    fluxo_par=f*flux_rad_mean[i][0][0]/volume_radial[index]
+                    fluxo_cientifico = format(fluxo_par, '.4e')
+                    flux_rad_termico.append(fluxo_cientifico)
+                    incerteza_par=f*flux_rad_dev[i][0][0]/volume_radial[index]
+                    inc_cientifico = format(incerteza_par, '.4e')
+                    flux_dev_termico.append(inc_cientifico)
+                elif i % 2 != 0 and i // 2 < len(volume_radial):  # Pegando os elementos ímpares ou fluxo rápido
+                    index = i // 2
+                    fluxo_impar=f*flux_rad_mean[i][0][0]/volume_radial[index]
+                    fluxo_cientifico = format(fluxo_impar, '.4e')
+                    flux_rad_rapido.append(fluxo_cientifico)
+                    incerteza_impar=f*flux_rad_dev[i][0][0]/volume_radial[index]
+                    inc_cientifico = format(incerteza_impar, '.4e')
+                    flux_dev_rapido.append(inc_cientifico)
+
+            print("  FLUXO TÉRMICO :")
+            for i in range(0,100):
+                print(" Intervalo ", i,": ","\t", flux_rad_termico[i], "+/-", flux_dev_termico[i], "[neutron/cm².s]")
+            print('')
+            print("  FLUXO RÁPIDO :")
+            for i in range(0,100):
+                print(" Intervalo ", i,": ","\t", flux_rad_rapido[i], "+/-", flux_dev_rapido[i], "[neutron/cm².s]")
 
