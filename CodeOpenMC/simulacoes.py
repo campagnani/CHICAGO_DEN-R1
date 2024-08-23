@@ -19,8 +19,8 @@ libChicagoDenR1.mkdir(voltar=False, nome="resultados", data=True)
 #chicago.plot2D_secao_transversal('xz')
 
 # Plotar 2D em 3 vistas e plotar em 3D *COM FONTE*
-#libChicagoDenR1.mkdir(voltar=True, nome="Plots_com_fonte", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(fonte=True)
+#libChicagoDenR1.mkdir(voltar=False, nome="Plots_com_fonte", data=False)
+#chicago = libChicagoDenR1.ChigagoDenR1(altura_fonte=5)
 #chicago.plot2D_secao_transversal('xy')
 #chicago.plot2D_secao_transversal('yz')
 #chicago.plot2D_secao_transversal('xz')
@@ -38,5 +38,5 @@ libChicagoDenR1.mkdir(voltar=False, nome="resultados", data=True)
 
 #Calcular Mechs
 libChicagoDenR1.mkdir(voltar=False, nome="tallyMesh", data=False)
-chicago = libChicagoDenR1.ChigagoDenR1(fonte=True, particulas=1000,ciclos=100)
+chicago = libChicagoDenR1.ChigagoDenR1(altura_fonte=5, particulas=10000,ciclos=100)
 chicago.tallies()
