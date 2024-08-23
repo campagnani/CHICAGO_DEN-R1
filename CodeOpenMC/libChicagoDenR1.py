@@ -350,7 +350,7 @@ class ChigagoDenR1:
         cilindro_ressalto = openmc.ZCylinder(r=(Vareta_combustivel_Diametro_interno/2+Vareta_combustivel_Espessura)/2-0.2)
 
         # Beirada externa do tanque
-        cilindro_beirada_tanque = openmc.ZCylinder(r=Tanque_Diametro/2+3.0)
+        self.cilindro_beirada_tanque = openmc.ZCylinder(r=Tanque_Diametro/2+3.0)
 
         # Células Vareta
         self.celula_moderador1               = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
@@ -532,10 +532,10 @@ class ChigagoDenR1:
         self.celula_refletor = openmc.Cell(fill=self.moderador, region=+plano_fundo_tanque_superior&-plano_refletor_lateral_superior&+cilindro_raio_externo_grade&-cilindro_raio_interno_tanque)
         self.celula_ar_externo_matriz = openmc.Cell(fill=self.ar, region=+plano_refletor_lateral_superior&-plano_altura_tanque&+cilindro_raio_externo_grade&-cilindro_raio_interno_tanque)
         self.celula_tanque   = openmc.Cell(fill=self.SS304, region=+cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_fundo_tanque_superior&-plano_divisao_altura_tanque_inf
-                                                                | +cilindro_raio_interno_tanque&-cilindro_beirada_tanque&+plano_divisao_altura_tanque_inf&-plano_divisao_altura_tanque_sup
+                                                                | +cilindro_raio_interno_tanque&-self.cilindro_beirada_tanque&+plano_divisao_altura_tanque_inf&-plano_divisao_altura_tanque_sup
                                                                 | +cilindro_raio_interno_tanque&-cilindro_raio_externo_tanque&+plano_divisao_altura_tanque_sup&-plano_beirada_altura_tanque
                                                                 | +plano_fundo_tanque_inferior&-plano_fundo_tanque_superior&-cilindro_raio_externo_tanque
-                                                                | +plano_beirada_altura_tanque&-plano_altura_tanque&+cilindro_raio_interno_tanque&-cilindro_beirada_tanque)
+                                                                | +plano_beirada_altura_tanque&-plano_altura_tanque&+cilindro_raio_interno_tanque&-self.cilindro_beirada_tanque)
 
         self.celula_ar_interna_tanque = openmc.Cell(fill=self.ar, region=-cilindro_raio_interno_tanque&+plano_vareta_altura&-plano_altura_tanque)
 
@@ -549,9 +549,9 @@ class ChigagoDenR1:
         plano_inferior_boundary  = openmc.ZPlane    (z0=self.fronteira_ar_inferior, boundary_type='vacuum')
 
         self.celula_ar_externa_tanque = openmc.Cell(fill=self.ar, region=-cilindro_boundary&-plano_superior_boundary&+plano_altura_tanque
-                                                            | -cilindro_boundary&+cilindro_beirada_tanque&+plano_beirada_altura_tanque&-plano_altura_tanque
+                                                            | -cilindro_boundary&+self.cilindro_beirada_tanque&+plano_beirada_altura_tanque&-plano_altura_tanque
                                                             | -cilindro_boundary&+cilindro_raio_externo_tanque&-plano_beirada_altura_tanque&+plano_divisao_altura_tanque_sup
-                                                            | -cilindro_boundary&+cilindro_beirada_tanque&-plano_divisao_altura_tanque_sup&+plano_divisao_altura_tanque_inf
+                                                            | -cilindro_boundary&+self.cilindro_beirada_tanque&-plano_divisao_altura_tanque_sup&+plano_divisao_altura_tanque_inf
                                                             | -cilindro_boundary&+cilindro_raio_externo_tanque&-plano_divisao_altura_tanque_inf&+plano_fundo_tanque_inferior
                                                             | -cilindro_boundary&-plano_fundo_tanque_inferior&+plano_inferior_boundary)
 
@@ -656,8 +656,6 @@ class ChigagoDenR1:
         print("################################################")
         print("###########         Espectro        ############")
         print("################################################")
-
-        #energy = [1.0000E-05, 1.1220E-05, 1.2589E-05, 1.4125E-05, 1.5849E-05, 1.7783E-05, 1.9953E-05, 2.2387E-05, 2.5119E-05, 2.8184E-05, 3.1623E-05, 3.5481E-05, 3.9811E-05, 4.4668E-05, 5.0119E-05, 5.6234E-05, 6.3096E-05, 7.0795E-05, 7.9433E-05, 8.9125E-05, 1.0000E-04, 1.1220E-04, 1.2589E-04, 1.4125E-04, 1.5849E-04, 1.7783E-04, 1.9953E-04, 2.2387E-04, 2.5119E-04, 2.8184E-04, 3.1623E-04, 3.5481E-04, 3.9811E-04, 4.4668E-04, 5.0119E-04, 5.6234E-04, 6.3096E-04, 7.0795E-04, 7.9433E-04, 8.9125E-04, 1.0000E-03, 1.1220E-03, 1.2589E-03, 1.4125E-03, 1.5849E-03, 1.7783E-03, 1.9953E-03, 2.2387E-03, 2.5119E-03, 2.8184E-03, 3.1623E-03, 3.5481E-03, 3.9811E-03, 4.4668E-03, 5.0119E-03, 5.6234E-03, 6.3096E-03, 7.0795E-03, 7.9433E-03, 8.9125E-03, 1.0000E-02, 1.1220E-02, 1.2589E-02, 1.4125E-02, 1.5849E-02, 1.7783E-02, 1.9953E-02, 2.2387E-02, 2.5119E-02, 2.8184E-02, 3.1623E-02, 3.5481E-02, 3.9811E-02, 4.4668E-02, 5.0119E-02, 5.6234E-02, 6.3096E-02, 7.0795E-02, 7.9433E-02, 8.9125E-02, 1.0000E-01, 1.1220E-01, 1.2589E-01, 1.4125E-01, 1.5849E-01, 1.7783E-01, 1.9953E-01, 2.2387E-01, 2.5119E-01, 2.8184E-01, 3.1623E-01, 3.5481E-01, 3.9811E-01, 4.4668E-01, 5.0119E-01, 5.6234E-01, 6.3096E-01, 7.0795E-01, 7.9433E-01, 8.9125E-01, 1.0000E+00, 1.1220E+00, 1.2589E+00, 1.4125E+00, 1.5849E+00, 1.7783E+00, 1.9953E+00, 2.2387E+00, 2.5119E+00, 2.8184E+00, 3.1623E+00, 3.5481E+00, 3.9811E+00, 4.4668E+00, 5.0119E+00, 5.6234E+00, 6.3096E+00, 7.0795E+00, 7.9433E+00, 8.9125E+00, 1.0000E+01, 1.1220E+01, 1.2589E+01, 1.4125E+01, 1.5849E+01, 1.7783E+01, 1.9953E+01, 2.2387E+01, 2.5119E+01, 2.8184E+01, 3.1623E+01, 3.5481E+01, 3.9811E+01, 4.4668E+01, 5.0119E+01, 5.6234E+01, 6.3096E+01, 7.0795E+01, 7.9433E+01, 8.9125E+01, 1.0000E+02, 1.1220E+02, 1.2589E+02, 1.4125E+02, 1.5849E+02, 1.7783E+02, 1.9953E+02, 2.2387E+02, 2.5119E+02, 2.8184E+02, 3.1623E+02, 3.5481E+02, 3.9811E+02, 4.4668E+02, 5.0119E+02, 5.6234E+02, 6.3096E+02, 7.0795E+02, 7.9433E+02, 8.9125E+02, 1.0000E+03, 1.1220E+03, 1.2589E+03, 1.4125E+03, 1.5849E+03, 1.7783E+03, 1.9953E+03, 2.2387E+03, 2.5119E+03, 2.8184E+03, 3.1623E+03, 3.5481E+03, 3.9811E+03, 4.4668E+03, 5.0119E+03, 5.6234E+03, 6.3096E+03, 7.0795E+03, 7.9433E+03, 8.9125E+03, 1.0000E+04, 1.1220E+04, 1.2589E+04, 1.4125E+04, 1.5849E+04, 1.7783E+04, 1.9953E+04, 2.2387E+04, 2.5119E+04, 2.8184E+04, 3.1623E+04, 3.5481E+04, 3.9811E+04, 4.4668E+04, 5.0119E+04, 5.6234E+04, 6.3096E+04, 7.0795E+04, 7.9433E+04, 8.9125E+04, 1.0000E+05, 1.1220E+05, 1.2589E+05, 1.4125E+05, 1.5849E+05, 1.7783E+05, 1.9953E+05, 2.2387E+05, 2.5119E+05, 2.8184E+05, 3.1623E+05, 3.5481E+05, 3.9811E+05, 4.4668E+05, 5.0119E+05, 5.6234E+05, 6.3096E+05, 7.0795E+05, 7.9433E+05, 8.9125E+05, 1.0000E+06, 1.1220E+06, 1.2589E+06, 1.4125E+06, 1.5849E+06, 1.7783E+06, 1.9953E+06, 2.2387E+06, 2.5119E+06, 2.8184E+06, 3.1623E+06, 3.5481E+06, 3.9811E+06, 4.4668E+06, 5.0119E+06, 5.6234E+06, 6.3096E+06, 7.0795E+06, 7.9433E+06, 8.9125E+06, 1.0000E+07, 1.1220E+07, 1.2589E+07, 1.4125E+07, 1.5849E+07, 1.7783E+07, 1.9953E+07, 2.2387E+07, 2.5119E+07, 2.8184E+07, 3.1623E+07, 3.5481E+07, 3.9811E+07, 4.4668E+07, 5.0119E+07, 5.6234E+07, 6.3096E+07, 7.0795E+07, 7.9433E+07, 8.9125E+07, 1.0000E+08]
         energy = np.logspace(-5, 8, num=100)
         #energy = [1.0000E-05, 1.0, 5.0E+03, 20.0E+06]
         #print(energy)
@@ -710,6 +708,20 @@ class ChigagoDenR1:
         tally_cubico.filters.append(mesh_filter_cubico)
         tally_cubico.filters.append(energy_filter)
         tally_cubico.scores.append('flux')
+
+        print("################################################")
+        print("###########       Mesh Pontual      ############")
+        print("################################################")
+        mash_pontual = openmc.RegularMesh()
+        mash_pontual.n_dimension = 2 #Number of mesh dimensions
+        largura_retangulo = 10
+        mash_pontual.lower_left  = [largura_retangulo/2,self.cilindro_beirada_tanque.r,self.limite_fonte_inferior] #The lower-left corner of the structured mesh. If only two coordinate are given, it is assumed that the mesh is an x-y mesh.
+        mash_pontual.upper_right = [-largura_retangulo/2,self.cilindro_beirada_tanque.r,self.limite_fonte_superior] #The upper-right corner of the structured mesh. If only two coordinate are given, it is assumed that the mesh is an x-y mesh.
+        mesh_filter_pontual = openmc.MeshFilter(mash_pontual)
+        tally_pontual = openmc.Tally(name='MESH_Pontual')
+        tally_pontual.filters.append(mesh_filter_pontual)
+        tally_pontual.scores.append('flux')
+
 
         ############## Coleção de tallies ##############
         tallies = openmc.Tallies([tally_cubico, fuel_element_tally, tally_radial_thermal, tally_radial_fast, tally_radial_ress, tally_fission, tally_nu,])# tally_cubico])
