@@ -670,10 +670,11 @@ class ChigagoDenR1:
         print("###########         Espectro        ############")
         print("################################################")
         energy = np.logspace(-5, 8, num=100)
-        #energy = [1.0000E-05, 1.0, 5.0E+03, 20.0E+06]
-        energy_filter = openmc.EnergyFilter(energy)
-        fuel_element_tally = openmc.Tally(name='Fluxo no universo combustível',tally_id=3) # F34
-        fuel_element_tally.filters = [openmc.CellFilter(self.celula_combustivel),energy_filter]
+        #energy = [1.0000E-05, 20.0E+06]
+        #print(energy)
+        #energy_filter = openmc.EnergyFilter(energy)
+        fuel_element_tally = openmc.Tally(name='Fluxo no universo combustível') # F34
+        fuel_element_tally.filters = [openmc.CellFilter(self.celula_combustivel)] #,energy_filter
         fuel_element_tally.scores.append('flux')
         self.celula_combustivel.volume
 
@@ -767,7 +768,6 @@ class ChigagoDenR1:
         #tally_pontual = openmc.Tally(name='MESH_Pontual')
         #tally_pontual.filters.append(mesh_filter_pontual)
         #tally_pontual.scores.append('flux')
-
 
         ############## Coleção de tallies ##############
         vetor_tallies = []
@@ -962,6 +962,7 @@ class ChigagoDenR1:
             h = 20.45
             qtd = 1410
             V=h*qtd*(np.pi*r2**2-np.pi*r1**2)
+
             for i in range(0,len(energy)-1):
                 fluxo = self.atividade*flux_espectro_mean[i][0][0]/V
                 incerteza = self.atividade*flux_espectro_dev[i][0][0]/V
@@ -969,9 +970,7 @@ class ChigagoDenR1:
                     flux_espectro.append(fluxo)
                     flux_dev_espectro.append(incerteza)
                     flux_energy.append(energy[i+1])
-                    #print(" Intervalo ", i,": ","\t", format(flux_espectro[-1], '.4e'), "+/-", format(flux_dev_espectro[-1], '.4e'), "[neutron/cm².s]")
-
-
+                    print(" Intervalo ", i,": ","\t", format(flux_espectro[-1], '.4e'), "+/-", format(flux_dev_espectro[-1], '.4e'), "[neutron/cm².s]")
 
             # Retirando o mesh radial
             print('')
