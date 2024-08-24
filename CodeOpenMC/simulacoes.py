@@ -9,34 +9,50 @@
 
 import libChicagoDenR1
 
+# Cria uma pasta para armazenar todos resultados com a data do teste
 libChicagoDenR1.mkdir(voltar=False, nome="resultados", data=True)
 
-# Plotar 2D em 3 vistas e plotar em 3D *SEM FONTE*
-#libChicagoDenR1.mkdir(voltar=False, nome="Plots_sem_fonte", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(fonte=False)
-#chicago.plot2D_secao_transversal('xy',origin=(0,0,-72.5))
-#chicago.plot2D_secao_transversal('yz')
-#chicago.plot2D_secao_transversal('xz')
+#####################################################
+############     SIMULAÇÃO SEM FONTE       ##########
+#####################################################
 
-# Plotar 2D em 3 vistas e plotar em 3D *COM FONTE*
-#libChicagoDenR1.mkdir(voltar=False, nome="Plots_com_fonte", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(altura_fonte=5)
-#chicago.plot2D_secao_transversal('xy')
-#chicago.plot2D_secao_transversal('yz')
-#chicago.plot2D_secao_transversal('xz')
+# Cria uma pasta para simulações sem fonte
+libChicagoDenR1.mkdir(nome="sem_fonte")
+## Cria reator sem fonte e define configurações de simulação
+chicago = libChicagoDenR1.ChigagoDenR1(particulas=10000, ciclos=220, inativo=20)
+## Plota vistas 2D
+chicago.plot2D_secao_transversal('xy')
+chicago.plot2D_secao_transversal('yz')
+chicago.plot2D_secao_transversal('xz')
+## Executa simulação
+chicago.run()
 
-## Calcular Keff
-#libChicagoDenR1.mkdir(voltar=True, nome="keff", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=10000, ciclos=220, inativo=20, fonte=False)
-#chicago.tallies()
-#chicago.run()
-##
-# Operaçao com fonte fixa
-#libChicagoDenR1.mkdir(voltar=False, nome="fonte", data=False)
-#chicago = libChicagoDenR1.ChigagoDenR1(material="u_nat", particulas=1000, ciclos=100, fonte=True)
-#chicago.run()
+#####################################################
+############     SIMULAÇÃO COM FONTE       ##########
+#####################################################
 
-#Calcular Mechs
-libChicagoDenR1.mkdir(voltar=False, nome="tallyMesh", data=False)
-chicago = libChicagoDenR1.ChigagoDenR1(altura_fonte=50, particulas=1000,ciclos=100)
-chicago.tallies()
+# Cria uma pasta para simulações com fonte
+libChicagoDenR1.mkdir(nome="com_fonte")
+## Cria reator sem fonte e define configurações de simulação
+chicago = libChicagoDenR1.ChigagoDenR1(altura_fonte=50, particulas=1000, ciclos=100)
+## Plota vistas 2D
+chicago.plot2D_secao_transversal('xy',)
+chicago.plot2D_secao_transversal('xy',origin=(0,0,-72.5))
+chicago.plot2D_secao_transversal('yz')
+chicago.plot2D_secao_transversal('xz')
+## Constroi Tallies
+### Tallies basicos
+chicago.tallies_nu()
+chicago.tallies_fission()
+### Tallies espaciais
+chicago.t_energy_filter_thermal_fast()
+chicago.tallies_radial()
+chicago.tallies_axial()
+chicago.tallies_carteziano()
+### Tallies espectrais
+chicago.t_energy_filter_espectrum_log()
+chicago.tallies_espectro()
+### Gera XML dos talies
+chicago.export_tallies()
+## Executa simulação
+chicago.run()
