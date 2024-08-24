@@ -38,5 +38,5 @@ libChicagoDenR1.mkdir(voltar=False, nome="resultados", data=True)
 
 #Calcular Mechs
 libChicagoDenR1.mkdir(voltar=False, nome="tallyMesh", data=False)
-chicago = libChicagoDenR1.ChigagoDenR1(altura_fonte=5, particulas=10000,ciclos=100)
+chicago = libChicagoDenR1.ChigagoDenR1(altura_fonte=50, particulas=1000,ciclos=100)
 chicago.tallies()
