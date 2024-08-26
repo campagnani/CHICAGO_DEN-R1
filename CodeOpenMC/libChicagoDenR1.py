@@ -6,6 +6,7 @@ import openmc.stats
 import openmc.data
 import numpy as np
 import os
+import shutil
 import math
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -16,15 +17,20 @@ from mpl_toolkits.mplot3d import Axes3D
 
 os.system('clear')
 
-def mkdir(nome="teste_sem_nome", data=False, voltar=True):
-    if (voltar==True):
-        os.chdir("../")
-    if (data==True):
-        agora = datetime.now()
-        nome = agora.strftime(nome+"_%Y%m%d_%H%M%S")
-    if not os.path.exists(nome):
-        os.makedirs(nome)
-    os.chdir(nome)
+simu = True
+
+def mkdir(nome="teste_sem_nome", data=False, voltar=True, cpinputs=False):
+    if simu:
+        if (voltar==True):
+            os.chdir("../")
+        if (data==True):
+            agora = datetime.now()
+            nome = agora.strftime(nome+"_%Y%m%d_%H%M%S")
+        if not os.path.exists(nome):
+            os.makedirs(nome)
+        os.chdir(nome)
+        if cpinputs:
+            os.system("cp ../*.py .")
     
 def chdir(nome=None):
     if (nome != None):
@@ -67,7 +73,7 @@ class ChigagoDenR1:
         
         #Tallies definidos posteriormente
         self.t_tally_all = []
-  
+
     def __del__(self):
         print(f"Objeto destruído.")
 
@@ -258,12 +264,12 @@ class ChigagoDenR1:
         ###
 
         #Variáveis de Dimenções dos planos
-        fundo_tanque_inferior   = -Tanque_Altura/2
-        fundo_tanque_superior   = fundo_tanque_inferior + Tanque_Espessura
+        self.fundo_tanque_inferior   = -Tanque_Altura/2
+        self.fundo_tanque_superior   = self.fundo_tanque_inferior + Tanque_Espessura
         lateral_tanque_interna  = Tanque_Diametro - (2*Tanque_Espessura)
-        altura_tanque           = fundo_tanque_inferior + Tanque_Altura
+        altura_tanque           = self.fundo_tanque_inferior + Tanque_Altura
         nivel_dagua             = altura_tanque - 6*2.54
-        grade_inferior_down     = fundo_tanque_superior + 2.54
+        grade_inferior_down     = self.fundo_tanque_superior + 2.54
         grade_interior_ressalto = grade_inferior_down + Grade_ressalto
         grade_inferior_up       = grade_inferior_down + Grade_Espessura
         grade_superior_down     = grade_inferior_up + Grade_Posicionamento
@@ -303,8 +309,8 @@ class ChigagoDenR1:
         plano_beirada_altura_tanque     = openmc.ZPlane(z0=altura_tanque - 1.2)
         plano_divisao_altura_tanque_sup = openmc.ZPlane(z0=altura_tanque - 76 + 1.2)
         plano_divisao_altura_tanque_inf = openmc.ZPlane(z0=altura_tanque - 76 - 1.2)
-        plano_fundo_tanque_superior     = openmc.ZPlane(z0=fundo_tanque_superior,)
-        plano_fundo_tanque_inferior     = openmc.ZPlane(z0=fundo_tanque_inferior,)
+        plano_fundo_tanque_superior     = openmc.ZPlane(z0=self.fundo_tanque_superior,)
+        plano_fundo_tanque_inferior     = openmc.ZPlane(z0=self.fundo_tanque_inferior,)
         plano_refletor_interno          = openmc.ZPlane(z0=refletor_interno_superior)
         plano_suporte_interno           = openmc.ZPlane(z0=suporte_interno_superior)
         plano_elemento_combustivel      = openmc.ZPlane(z0=elemento_combustivel)
@@ -400,7 +406,7 @@ class ChigagoDenR1:
 
         if altura_fonte is not None:
             ##Planos internos a vareta central
-            suporte_interno_central            = fundo_tanque_superior   + 5*2.54
+            suporte_interno_central            = self.fundo_tanque_superior   + 5*2.54
             refletor_inferior_interno_central  = suporte_interno_central - 0.2
             limite_clad_fonte_inferior         = suporte_interno_central + altura_fonte
             self.limite_fonte_inferior         = limite_clad_fonte_inferior + 0.1
@@ -545,7 +551,7 @@ class ChigagoDenR1:
         fronteira = 10
         self.fronteira_ar_lateral = Tanque_Diametro/2 + fronteira
         self.fronteira_ar_superior = altura_tanque + fronteira
-        self.fronteira_ar_inferior = fundo_tanque_inferior - fronteira
+        self.fronteira_ar_inferior = self.fundo_tanque_inferior - fronteira
         cilindro_boundary        = openmc.ZCylinder (r=self.fronteira_ar_lateral, boundary_type='vacuum')
         plano_superior_boundary  = openmc.ZPlane    (z0=self.fronteira_ar_superior, boundary_type='vacuum')
         plano_inferior_boundary  = openmc.ZPlane    (z0=self.fronteira_ar_inferior, boundary_type='vacuum')
@@ -564,7 +570,8 @@ class ChigagoDenR1:
 
         ############ Exportar Geometrias
         self.geometria = openmc.Geometry([self.celula_outer])
-        self.geometria.export_to_xml()
+        if simu:
+            self.geometria.export_to_xml()
 
     def plot2D_secao_transversal(self,basis="xz",width=[200,200],pixels=[5000,5000],origin=(0,0,0)):
         print("################################################")
@@ -582,7 +589,8 @@ class ChigagoDenR1:
         secao_transversal.colors = self.colors
         ############ Exportar Plots e Plotar
         plotagem = openmc.Plots((secao_transversal,))
-        plotagem.export_to_xml()  
+        if simu:
+            plotagem.export_to_xml()  
         openmc.plot_geometry()
 
     def plot3D(self):
@@ -599,7 +607,8 @@ class ChigagoDenR1:
         plot_3d.width = (150., 150., 150.)
         ############ Exportar Plots e Plotar
         plotagem = openmc.Plots((plot_3d,))
-        plotagem.export_to_xml()  
+        if simu:
+            plotagem.export_to_xml()  
         openmc.plot_geometry()
         openmc.voxel_to_vtk(plot_3d.filename+'.h5', plot_3d.filename)
 
@@ -640,53 +649,84 @@ class ChigagoDenR1:
                 )
             self.s_settings.run_mode = 'fixed source'
         self.s_settings.output = {'tallies': True}
-        self.s_settings.export_to_xml()
+        if simu:
+            self.s_settings.export_to_xml()
         print(self.s_settings)
 
     def run(self):
-        print("################################################")
-        print("###########        Executando       ############")
-        print("################################################")
-        openmc.run()
+        if simu:
+            print("################################################")
+            print("###########        Executando       ############")
+            print("################################################")
+            openmc.run()
         
     def export_tallies(self):
-        print("################################################")
-        print("###########    Exportando tallies   ############")
-        print("################################################")
-        #Se o vetor não estiver vazio exporte o XML
-        if self.t_tally_all is not []:
-            tallies = openmc.Tallies(self.t_tally_all)
-            tallies.export_to_xml()
+        if simu:
+            print("################################################")
+            print("###########    Exportando tallies   ############")
+            print("################################################")
+            #Se o vetor não estiver vazio exporte o XML
+            if self.t_tally_all is not []:
+                tallies = openmc.Tallies(self.t_tally_all)
+                tallies.export_to_xml()
     
     def t_energy_filter_espectrum_log(self,min=-5, max=8, qtd=100):
         self.t_energy_filter_espectrum = openmc.EnergyFilter(np.logspace(min, max, qtd))
 
     def t_energy_filter_thermal_fast(self):
-        self.t_energy_filter = []
+        # Colors
+
+        # xkcd color survey, prefixed with 'xkcd:' (e.g., 'xkcd:sky blue'; case insensitive) https://xkcd.com/color/rgb/
+        # Tableau Colors from the 'T10' categorical palette:
+        # {'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'}
+        
+        self.t_energy_filter       = []
+        self.t_energy_filter_name  = []
+        self.t_energy_filter_color = []
+        
+        #Intervalo termico
         self.t_energy_filter.append(openmc.EnergyFilter( [1E-05, 1    ] ) ) # ge=0 (thermal)
+        self.t_energy_filter_name.append("Thermal Energy Interval")
+        self.t_energy_filter_color.append("xkcd:red")
+        
+        #Intervalo rápido
         self.t_energy_filter.append(openmc.EnergyFilter( [1    , 20E06] ) ) # ge=1 (fast)
+        self.t_energy_filter_name.append("Fast Enegergy Interval")
+        self.t_energy_filter_color.append("xkcd:blue")
         
     def t_energy_filter_thermal_ressonance_fast(self):
-        self.t_energy_filter = []
+        self.t_energy_filter       = []
+        self.t_energy_filter_name  = []
+        self.t_energy_filter_color = []
+        
         self.t_energy_filter.append(openmc.EnergyFilter( [1E-05,  1   ] ) ) # ge=0 (thermal)
+        self.t_energy_filter_name.append("Thermal Energy Interval")
+        self.t_energy_filter_color.append("xkcd:red")
+        
         self.t_energy_filter.append(openmc.EnergyFilter( [1    ,  5E03] ) ) # ge=1 (ressonance)
+        self.t_energy_filter_name.append("Ressonance Energy Interval")
+        self.t_energy_filter_color.append("xkcd:green")
+        
         self.t_energy_filter.append(openmc.EnergyFilter( [5E03 , 20E06] ) ) # ge=2 (fast)
+        self.t_energy_filter_name.append("Fast Energy Interval")
+        self.t_energy_filter_color.append("xkcd:blue")
         
     def tallies_nu(self,):
         print("################################################")
         print("###########       tallies_nu        ############")
         print("################################################")
-        tally_nu = openmc.Tally(name='nu')
-        tally_nu.scores.append('nu-fission')
-        self.t_tally_all.append(tally_nu)
+        self.t_tally_nu = openmc.Tally(name='nu')
+        self.t_tally_nu.scores.append('nu-fission')
+        self.t_tally_all.append(self.t_tally_nu)
     
     def tallies_fission(self,):
         print("################################################")
         print("###########      tallies_fission    ############")
         print("################################################")
-        tally_fission = openmc.Tally(name='reaction rate')
-        tally_fission.scores.append('fission')
-        self.t_tally_all.append(tally_fission)
+        self.t_tally_fission = openmc.Tally(name='reaction rate')
+        self.t_tally_fission.scores.append('fission')
+        self.t_tally_all.append(self.t_tally_fission)
+        
       
     def tallies_radial(self,):
         print("################################################")
@@ -696,47 +736,72 @@ class ChigagoDenR1:
         # Variáveis reutilizaveis
         
         ## Quantidade de divisões radiais
-        self.divisions_radial_qtd = 1000
+        self.t_divisions_radial_qtd = 1000
         
         ## Definindo todos meshs radiais do centro até a fronteira de vácuo
-        self.divisions_radial_r = np.linspace(
+        self.t_divisions_radial_r = np.linspace(
             0.0,
             self.fronteira_ar_lateral,
-            self.divisions_radial_qtd
+            self.t_divisions_radial_qtd+1
             ).tolist()
         
         ## Definindo a posição e altura de cada mesh radial
         origin = []
-        self.divisions_radial_z = []
-        
+        if not hasattr(self, 't_divisions_radial_z'):
+            self.t_divisions_radial_z = []
+        if not hasattr(self, 't_tally_radial_name'):
+            self.t_tally_radial_name = []
+            
         ### mesh = 0 (nível e tamanho da fonte)
         #### posicao = centro da fonte em z
         #### altura  = tamanho da fonte em z
         posicao_z_fonte = (self.limite_fonte_superior + self.limite_fonte_inferior)/2
         origin.append( (0,0,posicao_z_fonte) )
         tamanho_z_fonte = self.limite_fonte_superior - self.limite_fonte_inferior
-        self.divisions_radial_z.append([ tamanho_z_fonte/2, -tamanho_z_fonte/2 ])
+        self.t_divisions_radial_z.append([ -tamanho_z_fonte/2, tamanho_z_fonte/2 ])
+        self.t_tally_radial_name.append("source level")
         
+        ### mesh = 1 (nível solo, tamanho 1cm)
+        #### posicao = solo
+        #### altura  = 1cm
+        origin.append( (0,0,self.fundo_tanque_inferior) )
+        tamanho_z = 1
+        self.t_divisions_radial_z.append([ -tamanho_z/2, tamanho_z/2 ])
+        self.t_tally_radial_name.append("top level")
+        
+        ### mesh = 2 (nível superior tanque, tamanho 1cm)
+        #### posicao = superior tanque
+        #### altura  = 1cm
+        origin.append( (0,0,self.fundo_tanque_superior) )
+        tamanho_z = 1
+        self.t_divisions_radial_z.append([ -tamanho_z/2, tamanho_z/2 ])
+        self.t_tally_radial_name.append("down level")
         # Definição automática dos filtros de Mesh's
         mesh_filter_radial = []
-        for mesh in range(0,len(self.divisions_radial_z)):
+        for mesh in range(0,len(self.t_divisions_radial_z)):
             mesh_filter_radial.append(
                 openmc.MeshFilter(
                     openmc.CylindricalMesh(
                         origin=origin[mesh],
-                        r_grid = (self.divisions_radial_r), 
-                        z_grid = (self.divisions_radial_z[mesh])
+                        r_grid = (self.t_divisions_radial_r), 
+                        z_grid = (self.t_divisions_radial_z[mesh])
                         )
                     )
                 )
 
+        # Se self.t_tally_radial não tiver sido criado ainda, crie uma lista vazia.
+        if not hasattr(self, 'tally_radial'):
+            self.t_tally_radial = []
+
         # Interação para construção do tally com cada mesh e intervalo de energia
-        for ge in range(0,len(self.t_energy_filter)):
-            for mesh in range(0,len(mesh_filter_radial)):
+        for mesh in range(0,len(mesh_filter_radial)):
+            self.t_tally_radial.append([])
+            for ge in range(0,len(self.t_energy_filter)):
                 tally_radial = openmc.Tally(name=f'MESH_Radial_{ge}_{mesh}')
                 tally_radial.filters.append(mesh_filter_radial[mesh])
                 tally_radial.filters.append(self.t_energy_filter[ge])
                 tally_radial.scores.append('flux')
+                self.t_tally_radial[-1].append(tally_radial)
                 self.t_tally_all.append(tally_radial)
 
     def tallies_axial(self,):
@@ -785,6 +850,10 @@ class ChigagoDenR1:
                     )
                 )
 
+        # Se self.t_tally_axial não tiver sido criado ainda, crie uma lista vazia.
+        if not hasattr(self, 'tally_radial'):
+            self.t_tally_axial = []
+            
         # Interação para construção do tally com cada mesh e intervalo de energia
         for ge in range(0,len(self.t_energy_filter)):
             for mesh in range(0,len(mesh_filter_axial)):
@@ -792,7 +861,9 @@ class ChigagoDenR1:
                 tally_axial.filters.append(self.t_energy_filter[ge])
                 tally_axial.filters.append(mesh_filter_axial[mesh])
                 tally_axial.scores.append('flux')
+                self.t_tally_axial.append(tally_axial)
                 self.t_tally_all.append(tally_axial)
+                
 
     def tallies_carteziano(self,):
         print("################################################")
@@ -822,28 +893,39 @@ class ChigagoDenR1:
         # Definição de filtro mesh
         mesh_filter_cubico = openmc.MeshFilter(mesh_cubico)
         
+        # Se self.t_tally_cubico não tiver sido criado ainda, crie uma lista vazia.
+        if not hasattr(self, 'tally_cubico'):
+            self.t_tally_cubico = []
+            
         # Interação para construção do tally com cada mesh e intervalo de energia
         for ge in range(0,len(self.t_energy_filter)):
-            tally_axial = openmc.Tally(name=f'MESH_Cubico_{ge}')
-            tally_axial.filters.append(self.t_energy_filter[ge])
-            tally_axial.filters.append(mesh_filter_cubico)
-            tally_axial.scores.append('flux')
-            self.t_tally_all.append(tally_axial)
+            tally_cubico = openmc.Tally(name=f'MESH_Cubico_{ge}')
+            tally_cubico.filters.append(self.t_energy_filter[ge])
+            tally_cubico.filters.append(mesh_filter_cubico)
+            tally_cubico.scores.append('flux')
+            self.t_tally_cubico.append(tally_cubico)
+            self.t_tally_all.append(tally_cubico)
+            
     
     def tallies_espectro(self,):
         print("################################################")
         print("###########         Espectro        ############")
         print("################################################")
         
-        fuel_element_tally = openmc.Tally(name='Fluxo no universo combustível')
-        fuel_element_tally.filters.append(openmc.CellFilter(self.celula_combustivel))
-        fuel_element_tally.filters.append(self.t_energy_filter_espectrum)
-        fuel_element_tally.scores.append('flux')
-        self.t_tally_all.append(fuel_element_tally)
+        # Se self.self.t_tally_espectro não tiver sido criado ainda, crie uma lista vazia.
+        if not hasattr(self, 't_tally_espectro'):
+            self.t_tally_espectro = []
+        
+        tally_espectro = openmc.Tally(name='Fluxo no universo combustível')
+        tally_espectro.filters.append(openmc.CellFilter(self.celula_combustivel))
+        tally_espectro.filters.append(self.t_energy_filter_espectrum)
+        tally_espectro.scores.append('flux')
+        self.t_tally_espectro.append(tally_espectro)
+        self.t_tally_all.append(tally_espectro)
 
-    def trabalhando_tallies_espectro(self):
+    def process_tallies_espectro(self):
         print("################################################")
-        print("########  Trabalhando dados com fonte  #########")
+        print("########    Process Tallies Espectro   #########")
         print("################################################")
         
         sp = openmc.StatePoint('statepoint.'+str(self.s_settings.batches)+'.h5')
@@ -875,6 +957,96 @@ class ChigagoDenR1:
                 flux_dev_espectro.append(incerteza)
                 flux_energy.append(self.t_energy_filter_espectrum[i+1])
                 print(" Intervalo ", i,": ","\t", format(flux_espectro[-1], '.4e'), "+/-", format(flux_dev_espectro[-1], '.4e'), "[neutron/cm².s]")
+
+    def process_tallies_radial(self):
+        print("################################################")
+        print("########     Process Tallies Radial    #########")
+        print("################################################")
+        sp = openmc.StatePoint('statepoint.'+str(self.s_settings.batches)+'.h5')
+        
+        # Se self.t_tally_radial existir
+        if hasattr(self, 't_tally_radial'):
+            flux_radial = []
+            for mesh in range(0,len(self.t_tally_radial)):
+                flux_radial.append([])  # Adiciona uma nova lista para cada mesh
+                for ge in range(0,len(self.t_energy_filter)):
+                    print(f'MESH_Radial_{ge}_{mesh}')
+                    flux_radial[mesh].append(sp.get_tally(scores=['flux'], name=f'MESH_Radial_{ge}_{mesh}'))
+        else:
+            print("Não foi possível trabalhar tallies_radial pois self.t_tally_radial está vazio")
+            return
+        
+        flux_norm_rad     = []  # Vetores para armazenar resultados
+        flux_norm_rad_dev = []
+        flux_norm_rad_r   = []
+        
+        # Iterar para cada mesh, em cada grupo de energia, para cada intervalo, o normalizando
+        # e deletando caso a incerteza seja maior que 5% 
+        for mesh in range(0,len(self.t_tally_radial)):
+            flux_norm_rad.append([])
+            flux_norm_rad_dev.append([])
+            flux_norm_rad_r.append([])
+            
+            # Volumes das areas do mesh radial
+            volume_radial = []
+            for i in range(0, self.t_divisions_radial_qtd):  # Use o número apropriado de intervalos
+                r1 = self.t_divisions_radial_r[i]
+                r2 = self.t_divisions_radial_r[i + 1]
+                h = self.t_divisions_radial_z[mesh][1] - self.t_divisions_radial_z[mesh][0]
+                volume_radial.append(3.14159265359 * (r2**2 - r1**2) * h)
+                
+            for ge in range(0,len(self.t_energy_filter)):
+                flux_norm_rad[mesh].append([])
+                flux_norm_rad_dev[mesh].append([])
+                flux_norm_rad_r[mesh].append([])
+                for i in range(0,self.t_divisions_radial_qtd):
+                    fluxo=self.atividade*flux_radial[mesh][ge].mean[i][0][0]/volume_radial[i]
+                    incerteza=self.atividade*flux_radial[mesh][ge].std_dev[i][0][0]/volume_radial[i]
+                    if incerteza/fluxo < 0.05:
+                        flux_norm_rad[mesh][ge].append(fluxo)
+                        flux_norm_rad_dev[mesh][ge].append(incerteza)
+                        flux_norm_rad_r[mesh][ge].append(self.t_divisions_radial_r[i])
+
+        # PLT styles
+
+        # ['Solarize_Light2', '_classic_test_patch', '_mpl-gallery', '_mpl-gallery-nogrid', 'bmh', 'classic', 'dark_background', 'fast', 'fivethirtyeight', 
+        # 'ggplot', 'grayscale', 'seaborn-v0_8', 'seaborn-v0_8-bright', 'seaborn-v0_8-colorblind', 'seaborn-v0_8-dark', 'seaborn-v0_8-dark-palette', 
+        # 'seaborn-v0_8-darkgrid', 'seaborn-v0_8-deep', 'seaborn-v0_8-muted', 'seaborn-v0_8-notebook', 'seaborn-v0_8-paper', 'seaborn-v0_8-pastel', 
+        # 'seaborn-v0_8-poster', 'seaborn-v0_8-talk', 'seaborn-v0_8-ticks', 'seaborn-v0_8-white', 'seaborn-v0_8-whitegrid', 'tableau-colorblind10']
+
+        
+
+        for mesh in range(0,len(self.t_tally_radial)):
+            plt.style.use('seaborn-v0_8-paper')
+
+            fig = plt.figure()
+            grafico = fig.add_subplot()
+            grafico.legend(fontsize=22)
+            grafico.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
+            plt.suptitle(f'Radial flux distribution in {self.t_tally_radial_name[mesh]}', x=0.53, y=0.90, ha='center', fontsize=24)
+            plt.xlabel('Radial Position (cm)', fontsize=20)
+            plt.ylabel('Flux (neutrons/cm².s)', fontsize=20)
+            
+            for ge in range(0,len(self.t_energy_filter)):
+                grafico.plot(
+                    np.array(flux_norm_rad_r[mesh][ge]),
+                    flux_norm_rad[mesh][ge],
+                    color=self.t_energy_filter_color[ge],
+                    linestyle='-',
+                    linewidth=0.5,
+                    label=self.t_energy_filter_name[ge]
+                    )
+                grafico.plot(
+                    -np.array(flux_norm_rad_r[mesh][ge]),
+                    flux_norm_rad[mesh][ge],
+                    color=self.t_energy_filter_color[ge],
+                    linestyle='-',
+                    linewidth=0.5,
+                    )
+            
+            plt.tight_layout()
+            plt.show()
+
 
     def outros():
         """
