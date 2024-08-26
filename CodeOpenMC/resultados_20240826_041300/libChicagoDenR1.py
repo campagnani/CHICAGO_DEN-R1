@@ -155,8 +155,7 @@ class ChigagoDenR1:
 
         self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,self.SS304,self.fonte,])
         self.materiais.cross_sections = '/opt/nuclear-data/endfb-viii.0-hdf5/cross_sections.xml' 
-        if simu:
-            self.materiais.export_to_xml()
+        self.materiais.export_to_xml()
         
         #Já definir as cores dos materiais para futuros plots
         self.colors = {
@@ -1004,7 +1003,7 @@ class ChigagoDenR1:
                     fluxo=self.atividade*flux_radial[mesh][ge].mean[i][0][0]/volume_radial[i]
                     incerteza=self.atividade*flux_radial[mesh][ge].std_dev[i][0][0]/volume_radial[i]
                     if incerteza/fluxo < 0.05:
-                        flux_norm_rad[mesh][ge].append(fluxo)
+                        flux_norm_rad[mesh][ge].append(flux_radial[mesh][ge].mean[i][0][0])
                         flux_norm_rad_dev[mesh][ge].append(incerteza)
                         flux_norm_rad_r[mesh][ge].append(self.t_divisions_radial_r[i])
 
@@ -1022,7 +1021,6 @@ class ChigagoDenR1:
 
             fig = plt.figure()
             grafico = fig.add_subplot()
-            grafico.legend(fontsize=22)
             grafico.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
             plt.suptitle(f'Radial flux distribution in {self.t_tally_radial_name[mesh]}', x=0.53, y=0.90, ha='center', fontsize=24)
             plt.xlabel('Radial Position (cm)', fontsize=20)
@@ -1044,7 +1042,7 @@ class ChigagoDenR1:
                     linestyle='-',
                     linewidth=0.5,
                     )
-            
+            grafico.legend(fontsize=22)
             plt.tight_layout()
             plt.show()
 
