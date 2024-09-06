@@ -6,31 +6,29 @@ import openmc.stats
 import openmc.data
 import numpy as np
 import os
-import shutil
 import math
 from pprint import pprint
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.ticker import FuncFormatter
+import matplotlib.ticker as ticker
 
 
 os.system('clear')
 
 simu = True
 
-def mkdir(nome="teste_sem_nome", data=False, voltar=True, cpinputs=False):
-    if simu:
-        if (voltar==True):
-            os.chdir("../")
-        if (data==True):
-            agora = datetime.now()
-            nome = agora.strftime(nome+"_%Y%m%d_%H%M%S")
-        if not os.path.exists(nome):
-            os.makedirs(nome)
-        os.chdir(nome)
-        if cpinputs:
-            os.system("cp ../*.py .")
+def mkdir(nome="teste_sem_nome",data=True,voltar=False):
+    if (voltar==True):
+        os.chdir("../")
+    if (data==True):
+        agora = datetime.now()
+        nome = agora.strftime(nome+"_%Y%m%d_%H%M%S")
+    if not os.path.exists(nome):
+        os.makedirs(nome)
+    os.chdir(nome)
     
 def chdir(nome=None):
     if (nome != None):
@@ -61,23 +59,24 @@ def chdir(nome=None):
 #####################################################
 
 class ChigagoDenR1:
-    def __init__(self, altura_fonte=None, particulas=1000, ciclos=100, inativo=10):
+
+    def __init__(self, material="u_nat", altura_fonte=0, particulas=1000, ciclos=100, inativo=10):
         #Definindo Material
-        self.u_nat()
+        if(material=="u_nat"):
+            self.material = self.u_nat()
+        else:
+            self.__del__(self)
         
         #Definindo geometria
-        self.geometriaPadrao(altura_fonte=altura_fonte)
+        self.geometriaPadrao(altura_fonte)
 
         #Definindo simulação
-        self.configuracoes(altura_fonte=altura_fonte,particulas=particulas,ciclos=ciclos,inativo=inativo)
+        self.configuracoes(fonte=altura_fonte,particulas=particulas,ciclos=ciclos,inativo=inativo)
         
-        #Tallies definidos posteriormente
-        self.t_tally_all = []
-
     def __del__(self):
         print(f"Objeto destruído.")
 
-    def u_nat(self, densidadeCombustivel=18.0, densidadeModerador=1.0):
+    def u_nat(self, tempCombustivel=294,tempModerador=294, densidadeCombustivel=18.0, densidadeModerador=1.0):
         print("################################################")
         print("############ Definição dos Materiais ###########")
         print("############          U_nat          ###########")
@@ -113,45 +112,26 @@ class ChigagoDenR1:
         self.aluminio.set_density('g/cm3', 2.7)
 
         self.SS304 = openmc.Material(name='Aço INOX', material_id=5)
-        self.SS304.add_nuclide('C12',   2.9639E-04, percent_type = 'wo')
-        self.SS304.add_nuclide('C13',   3.6051E-06, percent_type = 'wo')
-        self.SS304.add_nuclide('N14',   9.9608E-04, percent_type = 'wo')
-        self.SS304.add_nuclide('N15',   3.9196E-06, percent_type = 'wo')
-        self.SS304.add_nuclide('S32',   2.8424E-04, percent_type = 'wo')
-        self.SS304.add_nuclide('S33',   2.3137E-06, percent_type = 'wo')
-        self.SS304.add_nuclide('S34',   1.3380E-05, percent_type = 'wo')
-        self.SS304.add_nuclide('S36',   6.7303E-08, percent_type = 'wo')
-        self.SS304.add_nuclide('P31',   4.5000E-04, percent_type = 'wo')
-        self.SS304.add_nuclide('Si28',  6.8905E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Si29',  3.6136E-04, percent_type = 'wo')
-        self.SS304.add_nuclide('Si30',  2.4813E-04, percent_type = 'wo')
-        self.SS304.add_nuclide('Fe54',  3.6055E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Fe56',  5.8692E-01, percent_type = 'wo')
-        self.SS304.add_nuclide('Fe57',  1.3797E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Fe58',  1.8683E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Mn55',  2.0000E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Cr50',  3.3926E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Cr52',  6.8034E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Cr53',  7.8631E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Cr54',  1.9942E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Ni58',  8.0637E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Ni60',  3.2131E-02, percent_type = 'wo')
-        self.SS304.add_nuclide('Ni61',  1.4202E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Ni62',  4.6012E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Ni64',  1.2103E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Mo92',  3.5544E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Mo94',  2.2637E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Mo95',  3.9375E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Mo96',  4.1688E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Mo97',  2.4118E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Mo98',  6.1566E-03, percent_type = 'wo')
-        self.SS304.add_nuclide('Mo100', 2.5073E-03, percent_type = 'wo')
-        self.SS304.set_density('g/cm3', 8.0)
+        self.SS304.add_element('C',  4.3000E-04 , percent_type = 'wo')
+        self.SS304.add_element('Cr', 1.9560E-01 , percent_type = 'wo')
+        self.SS304.add_element('Ni', 9.6600E-02 , percent_type = 'wo')
+        self.SS304.add_element('Mo', 8.9000E-03 , percent_type = 'wo')
+        self.SS304.add_element('Mn', 5.4000E-04 , percent_type = 'wo')
+        self.SS304.add_element('Si', 5.0000E-04 , percent_type = 'wo')
+        self.SS304.add_element('Cu', 2.0000E-05 , percent_type = 'wo')
+        self.SS304.add_element('Co', 3.0000E-05 , percent_type = 'wo')
+        self.SS304.add_element('P',  2.7000E-04 , percent_type = 'wo')
+        self.SS304.add_element('S',  1.0000E-04 , percent_type = 'wo')
+        self.SS304.add_element('N',  1.4000E-04 , percent_type = 'wo')
+        self.SS304.add_element('Fe', 6.9687E-01 , percent_type = 'wo')
+        self.SS304.set_density('g/cm3', 7.92)
 
         self.fonte = openmc.Material(name='Plutonio Berilio', material_id=6)
-        self.fonte.add_nuclide('Pu239', percent=1, percent_type='wo')
-        self.fonte.add_nuclide('Be9', percent=3, percent_type='wo')
-        self.fonte.set_density('g/cm3', 15.0)
+        self.fonte.add_nuclide('Pu239', percent=0.6204, percent_type='wo')
+        self.fonte.add_nuclide('Pu240', percent=0.0453, percent_type='wo')
+        self.fonte.add_nuclide('Pu241', percent=0.0015, percent_type='wo')
+        self.fonte.add_nuclide('Be9',   percent=0.3328, percent_type='wo')
+        self.fonte.set_density('g/cm3', 4.6781)
 
         self.materiais = openmc.Materials([self.combustivel,self.moderador,self.ar,self.aluminio,self.SS304,self.fonte,])
         self.materiais.cross_sections = '/opt/nuclear-data/endfb-viii.0-hdf5/cross_sections.xml' 
@@ -164,11 +144,12 @@ class ChigagoDenR1:
             self.combustivel: 'yellow',
             self.ar: 'pink',
             self.aluminio: 'black',
-            self.SS304: 'brown',
+            self.SS304: 'gray',
             self.fonte: 'red'
         }
 
-    def geometriaPadrao(self, altura_fonte=None):
+
+    def geometriaPadrao(self, altura_fonte = 0):
         print("################################################")
         print("############ Definição da Geometria ############")
         print("################################################")
@@ -220,6 +201,7 @@ class ChigagoDenR1:
             #Material: aço inoxidável
             #Dimensões:
         Tanque_Altura       =	152.5
+        self.tanque_altura  =   152.5
         Tanque_Diametro     =	122
         Tanque_Espessura    =	1.2
 
@@ -251,7 +233,7 @@ class ChigagoDenR1:
             #80g de plutonio total
             #Atividade de 5 curie total
             #3 cilindros de aço inox com plutônio-berilio
-            #Colocados dentro de recipiente aluminio 3 cm e 20cm
+            #Colocados dentro de recipiente aluminio de 3 cm de diametro e 20cm de altura
             #
             #Atividades cada mini-cilindro:
             # 1.87 * 10^6
@@ -264,13 +246,17 @@ class ChigagoDenR1:
         ###
         ###
 
+        ###
+        # ZERO DA GEOMETRIA É O MEIO DO TANQUE
+        ###
+
         #Variáveis de Dimenções dos planos
-        self.fundo_tanque_inferior   = -Tanque_Altura/2
-        self.fundo_tanque_superior   = self.fundo_tanque_inferior + Tanque_Espessura
+        fundo_tanque_inferior   = -Tanque_Altura/2
+        fundo_tanque_superior   = fundo_tanque_inferior + Tanque_Espessura
         lateral_tanque_interna  = Tanque_Diametro - (2*Tanque_Espessura)
-        altura_tanque           = self.fundo_tanque_inferior + Tanque_Altura
+        altura_tanque           = fundo_tanque_inferior + Tanque_Altura
         nivel_dagua             = altura_tanque - 6*2.54
-        grade_inferior_down     = self.fundo_tanque_superior + 2.54
+        grade_inferior_down     = fundo_tanque_superior + 2.54
         grade_interior_ressalto = grade_inferior_down + Grade_ressalto
         grade_inferior_up       = grade_inferior_down + Grade_Espessura
         grade_superior_down     = grade_inferior_up + Grade_Posicionamento
@@ -297,7 +283,7 @@ class ChigagoDenR1:
         clad_comb_13              = clad_comb_12 + 0.5       #
         clad_comb_14              = clad_comb_13 + 20.45     # Fuel
         clad_comb_15              = clad_comb_14 + 0.5  
-
+        self.centro_fonte = clad_comb_7 + 10.225
         #Criação das formas geométricas
 
         # Planos Horizontais
@@ -310,8 +296,8 @@ class ChigagoDenR1:
         plano_beirada_altura_tanque     = openmc.ZPlane(z0=altura_tanque - 1.2)
         plano_divisao_altura_tanque_sup = openmc.ZPlane(z0=altura_tanque - 76 + 1.2)
         plano_divisao_altura_tanque_inf = openmc.ZPlane(z0=altura_tanque - 76 - 1.2)
-        plano_fundo_tanque_superior     = openmc.ZPlane(z0=self.fundo_tanque_superior,)
-        plano_fundo_tanque_inferior     = openmc.ZPlane(z0=self.fundo_tanque_inferior,)
+        plano_fundo_tanque_superior     = openmc.ZPlane(z0=fundo_tanque_superior,)
+        plano_fundo_tanque_inferior     = openmc.ZPlane(z0=fundo_tanque_inferior,)
         plano_refletor_interno          = openmc.ZPlane(z0=refletor_interno_superior)
         plano_suporte_interno           = openmc.ZPlane(z0=suporte_interno_superior)
         plano_elemento_combustivel      = openmc.ZPlane(z0=elemento_combustivel)
@@ -405,54 +391,56 @@ class ChigagoDenR1:
         ############################### Celulas e superfícies específicas para o Universo Vareta Central (fonte)############################
         ####################################################################################################################################
 
-        if altura_fonte is not None:
-            ##Planos internos a vareta central
-            suporte_interno_central            = self.fundo_tanque_superior   + 5*2.54
-            refletor_inferior_interno_central  = suporte_interno_central - 0.2
-            limite_clad_fonte_inferior         = suporte_interno_central + altura_fonte
-            self.limite_fonte_inferior         = limite_clad_fonte_inferior + 0.1
-            self.limite_fonte_superior         = self.limite_fonte_inferior + 19.8
-            limite_clad_fonte_superior         = self.limite_fonte_superior + 0.1
-            self.diametro_cilindro_fonte       = 2.8 # cm
-            diametro_clad_fonte                = 3.0 # cm
+        ##Planos internos a vareta central
+        suporte_interno_central            = fundo_tanque_superior   + 5*2.54
+        refletor_inferior_interno_central  = suporte_interno_central - 0.2
+        limite_clad_fonte_inferior         = self.centro_fonte - 10 + altura_fonte
+        self.limite_fonte_inferior         = limite_clad_fonte_inferior + 0.1
+        self.limite_fonte_superior         = self.limite_fonte_inferior + 19.8
+        limite_clad_fonte_superior         = self.limite_fonte_superior + 0.1
+        self.diametro_cilindro_fonte       = 1.28433406196 # cm
+        self.diametro_cilindro_ar_fonte    = 2.8 # cm
+        diametro_clad_fonte                = 3.0 # cm
 
-            plano_superior_suporte_fonte = openmc.ZPlane(z0=suporte_interno_central)
-            plano_inferior_suporte_fonte = openmc.ZPlane(z0=refletor_inferior_interno_central)
-            plano_superior_fonte         = openmc.ZPlane(z0=self.limite_fonte_superior)
-            plano_inferior_fonte         = openmc.ZPlane(z0=self.limite_fonte_inferior)
-            plano_clad_fonte_superior    = openmc.ZPlane(z0=limite_clad_fonte_superior)
-            plano_clad_fonte_inferior    = openmc.ZPlane(z0=limite_clad_fonte_inferior)
+        plano_superior_suporte_fonte = openmc.ZPlane(z0=suporte_interno_central)
+        plano_inferior_suporte_fonte = openmc.ZPlane(z0=refletor_inferior_interno_central)
+        plano_superior_fonte         = openmc.ZPlane(z0=self.limite_fonte_superior)
+        plano_inferior_fonte         = openmc.ZPlane(z0=self.limite_fonte_inferior)
+        plano_clad_fonte_superior    = openmc.ZPlane(z0=limite_clad_fonte_superior)
+        plano_clad_fonte_inferior    = openmc.ZPlane(z0=limite_clad_fonte_inferior)
 
-            superficie_radial_fonte      = openmc.ZCylinder(r=self.diametro_cilindro_fonte/2)
-            superficie_radial_clad_fonte = openmc.ZCylinder(r=diametro_clad_fonte/2)
+        superficie_radial_fonte      = openmc.ZCylinder(r=self.diametro_cilindro_fonte/2)
+        superficie_radial_ar_fonte   = openmc.ZCylinder(r=self.diametro_cilindro_ar_fonte/2)
+        superficie_radial_clad_fonte = openmc.ZCylinder(r=diametro_clad_fonte/2)
 
-            self.celula_refletor_inferior_suporte_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_inferior_suporte_fonte&-cilindro_raio_interno_vareta)
-            self.celula_suporte_interno_fonte    = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_suporte_fonte&-plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
-            self.celula_fonte                    = openmc.Cell(fill=self.fonte,   region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_fonte)  #trocar para a fonte
-            self.celula_clad_fonte               = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_clad_fonte&+superficie_radial_fonte
-                                                                            | +plano_clad_fonte_inferior&-plano_inferior_fonte&-superficie_radial_clad_fonte
-                                                                            | +plano_superior_fonte&-plano_clad_fonte_superior&-superficie_radial_clad_fonte)  #trocar para aço inox
-            self.celula_refletor_lateral_fonte   = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_inferior&-plano_clad_fonte_superior&-cilindro_raio_interno_vareta&+superficie_radial_clad_fonte)
-            self.celula_refletor_superior_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_superior&-plano_refletor_lateral_superior&-cilindro_raio_interno_vareta)
-            self.celula_refletor_inferior_fonte  = openmc.Cell(fill=self.moderador,   region=-plano_clad_fonte_inferior&+plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
+        self.celula_refletor_inferior_suporte_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_inferior_suporte_fonte&-cilindro_raio_interno_vareta)
+        self.celula_suporte_interno_fonte    = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_suporte_fonte&-plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
+        self.celula_fonte                    = openmc.Cell(fill=self.fonte,   region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_fonte)  
+        self.celula_clad_fonte               = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_clad_fonte&+superficie_radial_ar_fonte
+                                                                        | +plano_clad_fonte_inferior&-plano_inferior_fonte&-superficie_radial_clad_fonte
+                                                                        | +plano_superior_fonte&-plano_clad_fonte_superior&-superficie_radial_clad_fonte)  
+        self.celula_ar_fonte                 = openmc.Cell(fill=self.ar,          region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_ar_fonte&+superficie_radial_fonte)
+        self.celula_refletor_lateral_fonte   = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_inferior&-plano_clad_fonte_superior&-cilindro_raio_interno_vareta&+superficie_radial_clad_fonte)
+        self.celula_refletor_superior_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_superior&-plano_refletor_lateral_superior&-cilindro_raio_interno_vareta)
+        self.celula_refletor_inferior_fonte  = openmc.Cell(fill=self.moderador,   region=-plano_clad_fonte_inferior&+plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
 
-            # CÉLULAS QUE FORAM DUPLICADAS PELO FATO DE NÃO PODER REUTILIZAR CÉLULAS PARA OUTROS UNIVERSOS
-            self.celula_moderador1_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
-            self.celula_moderador2_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
-            self.celula_moderador3_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
-            self.celula_grade_inferior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
-            self.celula_grade_superior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
-            self.celula_clad_vareta_fonte         = openmc.Cell(fill=self.aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
-            self.celula_ar_externo_vareta_fonte   = openmc.Cell(fill=self.ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_externo_vareta)
-            self.celula_ar_superior_interno_fonte = openmc.Cell(fill=self.ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
+        # CÉLULAS QUE FORAM DUPLICADAS PELO FATO DE NÃO PODER REUTILIZAR CÉLULAS PARA OUTROS UNIVERSOS
+        self.celula_moderador1_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
+        self.celula_moderador2_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
+        self.celula_moderador3_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
+        self.celula_grade_inferior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
+        self.celula_grade_superior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
+        self.celula_clad_vareta_fonte         = openmc.Cell(fill=self.aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
+        self.celula_ar_externo_vareta_fonte   = openmc.Cell(fill=self.ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_externo_vareta)
+        self.celula_ar_superior_interno_fonte = openmc.Cell(fill=self.ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
 
 
-            self.universo_fonte = openmc.Universe(cells=(self.celula_clad_vareta_fonte,self.celula_refletor_inferior_fonte,self.celula_suporte_interno_fonte,
-                                                    self.celula_fonte,self.celula_clad_fonte,self.celula_refletor_lateral_fonte,
-                                                    self.celula_refletor_superior_fonte,self.celula_ar_externo_vareta_fonte,self.celula_refletor_inferior_suporte_fonte,
-                                                    self.celula_grade_superior_fonte, self.celula_grade_inferior_fonte,self.celula_ar_superior_interno_fonte,
-                                                    self.celula_moderador1_fonte, self.celula_moderador2_fonte, self.celula_moderador3_fonte,))  # Identidade da fonte
-            
+        self.universo_fonte = openmc.Universe(cells=(self.celula_clad_vareta_fonte,self.celula_refletor_inferior_fonte,self.celula_suporte_interno_fonte,
+                                                self.celula_fonte,self.celula_clad_fonte,self.celula_refletor_lateral_fonte, self.celula_ar_fonte,
+                                                self.celula_refletor_superior_fonte,self.celula_ar_externo_vareta_fonte,self.celula_refletor_inferior_suporte_fonte,
+                                                self.celula_grade_superior_fonte, self.celula_grade_inferior_fonte,self.celula_ar_superior_interno_fonte,
+                                                self.celula_moderador1_fonte, self.celula_moderador2_fonte, self.celula_moderador3_fonte,))  # Identidade da fonte
+        
         ####################################################################################################################################
         ####################################################################################################################################
 
@@ -525,7 +513,7 @@ class ChigagoDenR1:
         anel_comb_mod_3  = [self.universo_vareta_combustível]*18
         anel_comb_mod_2  = [self.universo_vareta_combustível]*12
         anel_comb_mod_1  = [self.universo_vareta_combustível]*6
-        if altura_fonte is not None:
+        if altura_fonte != None:#Se altura for = None, então não existe fonte
             anel_font_mod_0  = [self.universo_fonte]
         else:
             anel_font_mod_0  = [self.universo_agua]
@@ -552,7 +540,7 @@ class ChigagoDenR1:
         fronteira = 10
         self.fronteira_ar_lateral = Tanque_Diametro/2 + fronteira
         self.fronteira_ar_superior = altura_tanque + fronteira
-        self.fronteira_ar_inferior = self.fundo_tanque_inferior - fronteira
+        self.fronteira_ar_inferior = fundo_tanque_inferior - fronteira
         cilindro_boundary        = openmc.ZCylinder (r=self.fronteira_ar_lateral, boundary_type='vacuum')
         plano_superior_boundary  = openmc.ZPlane    (z0=self.fronteira_ar_superior, boundary_type='vacuum')
         plano_inferior_boundary  = openmc.ZPlane    (z0=self.fronteira_ar_inferior, boundary_type='vacuum')
@@ -574,7 +562,8 @@ class ChigagoDenR1:
         if simu:
             self.geometria.export_to_xml()
 
-    def plot2D_secao_transversal(self,basis="xz",width=[200,200],pixels=[5000,5000],origin=(0,0,0)):
+    
+    def plot2D_secao_transversal(self,basis="xz",width=[142,142],pixels=[15000,15000],origin=(0,0,0)):
         print("################################################")
         print("############        Plot 2D         ############")
         print("################################################")
@@ -592,7 +581,7 @@ class ChigagoDenR1:
         plotagem = openmc.Plots((secao_transversal,))
         if simu:
             plotagem.export_to_xml()  
-        openmc.plot_geometry()
+            openmc.plot_geometry()
 
     def plot3D(self):
         print("################################################")
@@ -610,799 +599,1101 @@ class ChigagoDenR1:
         plotagem = openmc.Plots((plot_3d,))
         if simu:
             plotagem.export_to_xml()  
-        openmc.plot_geometry()
-        openmc.voxel_to_vtk(plot_3d.filename+'.h5', plot_3d.filename)
+            openmc.plot_geometry()
+            openmc.voxel_to_vtk(plot_3d.filename+'.h5', plot_3d.filename)
 
-    def configuracoes(self,altura_fonte=None,particulas=1000,ciclos=100,inativo=10,atrasados=True, photon=False):
+
+    def configuracoes(self,fonte=0,particulas=1000,ciclos=100,inativo=10,atrasados=True):
         print("################################################")
         print("########### Definição da Simulação  ############")
         print("################################################")
         # Volume calculation
 
-        self.s_settings = openmc.Settings()
-        self.s_settings.particles = particulas
-        self.s_settings.batches = ciclos
-        self.s_settings.create_delayed_neutrons = atrasados
-        self.s_settings.photon_transport = photon
-        self.s_settings.inactive = inativo
-        
-        if altura_fonte is None:
-            print("Configurado sem fonte fixa")
-            self.s_settings.source = openmc.IndependentSource(
-                space=openmc.stats.Point()
-                )
+        self.settings = openmc.Settings()
+        self.settings.particles = particulas
+        self.settings.batches = ciclos
+        self.settings.create_delayed_neutrons = atrasados
+        self.settings.photon_transport = True
+        if fonte is not None:
+            self.atividade = 1.01 * 10**7
+            space = openmc.stats.CylindricalIndependent(
+                r=openmc.stats.Uniform(0, self.diametro_cilindro_fonte/2),
+                phi=openmc.stats.Uniform(0, 2 * np.pi),
+                z=openmc.stats.Uniform(self.limite_fonte_inferior, self.limite_fonte_superior),
+                #origin=(0.0, 0.0, self.limite_fonte_inferior+9.9)
+            )
+            #print("r: ", self.diametro_cilindro_fonte/2)
+            #print("phi: ", 2 * np.pi)
+            #print("z2: ", self.limite_fonte_superior)
+            #print("z1: ", self.limite_fonte_inferior)
+            #print("origin: ", space.origin)
+            angle = openmc.stats.Isotropic()
+            energy = openmc.stats.Discrete(
+                [
+                    3.70E+04,
+                    7.80E+04,
+                    1.70E+05,
+                    3.10E+05,
+                    7.00E+05,
+                    1.00E+06,
+                    2.90E+06,
+                    5.60E+06,
+                    1.00E+07
+                ],
+                [
+                    1.15E-03,
+                    2.89E-03,
+                    6.41E-03,
+                    1.48E-02,
+                    7.05E-02,
+                    1.09E-01,
+                    1.48E-01,
+                    2.69E-01,
+                    3.78E-01
+                ]
+            )
+            #time = openmc.stats.Uniform(0, self.atividade)
+            self.settings.source = openmc.IndependentSource(space=space,angle=angle,energy=energy)#,time=time)
+            self.settings.inactive = 0
+            self.settings.run_mode = 'fixed source'
         else:
-            print("Definições da fonte fixa")
-            print("r+: ", self.diametro_cilindro_fonte/2)
-            print("phi: ", 2 * np.pi)
-            print("z+: ", self.limite_fonte_superior)
-            print("z-: ", self.limite_fonte_inferior)
-            self.atividade = 9.26 * 10**6
-            self.s_settings.source = openmc.IndependentSource(
-                space=openmc.stats.CylindricalIndependent(
-                    r=openmc.stats.Uniform(0, self.diametro_cilindro_fonte/2),
-                    phi=openmc.stats.Uniform(0, 2 * np.pi),
-                    z=openmc.stats.Uniform(self.limite_fonte_inferior, self.limite_fonte_superior),
-                    #origin=(0.0, 0.0, self.limite_fonte_inferior+9.9)
-                    ),
-                angle=openmc.stats.Isotropic(),
-                energy=openmc.stats.Discrete([14e6], [1.0])
-                )
-            self.s_settings.run_mode = 'fixed source'
-        self.s_settings.output = {'tallies': True}
+            self.settings.inactive = inativo
+            self.settings.source = openmc.IndependentSource(space=openmc.stats.Point())
+        self.settings.output = {'tallies': False}
         if simu:
-            self.s_settings.export_to_xml()
-        print(self.s_settings)
-
+            self.settings.export_to_xml()
+        #Faça ciclos ser acessada de fora
+        self.ciclos = ciclos
+        print(self.settings)
+            
     def run(self):
+        print("################################################")
+        print("###########        Executando       ############")
+        print("################################################")
         if simu:
-            print("################################################")
-            print("###########        Executando       ############")
-            print("################################################")
             openmc.run()
-        
-    def export_tallies(self):
-        if simu:
-            print("################################################")
-            print("###########    Exportando tallies   ############")
-            print("################################################")
-            #Se o vetor não estiver vazio exporte o XML
-            if self.t_tally_all is not []:
-                tallies = openmc.Tallies(self.t_tally_all)
-                tallies.export_to_xml()
-    
-    def t_energy_filter_espectrum_log(self,min=-5, max=8, qtd=100):
-        self.t_energy_filter_espectrum = openmc.EnergyFilter(np.logspace(min, max, qtd))
 
-    def t_energy_filter_thermal_fast(self):
-        # Colors
+    def tallies(self,):
 
-        # xkcd color survey, prefixed with 'xkcd:' (e.g., 'xkcd:sky blue'; case insensitive) https://xkcd.com/color/rgb/
-        # Tableau Colors from the 'T10' categorical palette:
-        # {'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'}
-        
-        self.t_energy_filter       = []
-        self.t_energy_filter_name  = []
-        self.t_energy_filter_color = []
-        
-        #Intervalo termico
-        self.t_energy_filter.append(openmc.EnergyFilter( [1E-05, 1    ] ) ) # ge=0 (thermal)
-        self.t_energy_filter_name.append("Thermal Energy Interval")
-        self.t_energy_filter_color.append("xkcd:red")
-        
-        #Intervalo rápido
-        self.t_energy_filter.append(openmc.EnergyFilter( [1    , 20E06] ) ) # ge=1 (fast)
-        self.t_energy_filter_name.append("Fast Enegergy Interval")
-        self.t_energy_filter_color.append("xkcd:blue")
-        
-    def t_energy_filter_thermal_ressonance_fast(self):
-        self.t_energy_filter       = []
-        self.t_energy_filter_name  = []
-        self.t_energy_filter_color = []
-        
-        self.t_energy_filter.append(openmc.EnergyFilter( [1E-05,  1   ] ) ) # ge=0 (thermal)
-        self.t_energy_filter_name.append("Thermal Energy Interval")
-        self.t_energy_filter_color.append("xkcd:red")
-        
-        self.t_energy_filter.append(openmc.EnergyFilter( [1    ,  5E03] ) ) # ge=1 (ressonance)
-        self.t_energy_filter_name.append("Ressonance Energy Interval")
-        self.t_energy_filter_color.append("xkcd:green")
-        
-        self.t_energy_filter.append(openmc.EnergyFilter( [5E03 , 20E06] ) ) # ge=2 (fast)
-        self.t_energy_filter_name.append("Fast Energy Interval")
-        self.t_energy_filter_color.append("xkcd:blue")
-        
-    def tallies_nu(self,):
+        energy_filter_thermal  = openmc.EnergyFilter([1.0E-05, 1.0  ]) 
+        energy_filter_fast = openmc.EnergyFilter([1.0    , 11E06]) 
+        #energy_filter_fonte    = openmc.EnergyFilter([10E06  , 20E06]) 
+
+        neutron_particle_filter = openmc.ParticleFilter(bins='neutron')
+        photon_particle_filter = openmc.ParticleFilter(bins='photon')
+
         print("################################################")
-        print("###########       tallies_nu        ############")
+        print("###########          Básicos        ############")
         print("################################################")
-        self.t_tally_nu = openmc.Tally(name='nu')
-        self.t_tally_nu.scores.append('nu-fission')
-        self.t_tally_all.append(self.t_tally_nu)
-    
-    def tallies_fission(self,):
+        tally_nu = openmc.Tally(name='nu',tally_id=1)
+        tally_nu.filters.append(neutron_particle_filter)
+        tally_nu.scores.append('nu-fission')
+        tally_fission = openmc.Tally(name='reaction rate',tally_id=2)
+        tally_fission.filters.append(neutron_particle_filter)
+        tally_fission.scores.append('fission')
+
         print("################################################")
-        print("###########      tallies_fission    ############")
+        print("###########       Taxa de dose      ############")
         print("################################################")
-        self.t_tally_fission = openmc.Tally(name='reaction rate')
-        self.t_tally_fission.scores.append('fission')
-        self.t_tally_all.append(self.t_tally_fission)
+
+        ### TALLY PARA CALCULAR TAXA DE DOSE ###
+
+        # TOPO CENTRAL NEUTRONS
+        energy_bins_n, dose_coeffs_n = openmc.data.dose_coefficients(particle='neutron', geometry='ISO')
+        energy_function_filter_n = openmc.EnergyFunctionFilter(energy_bins_n, dose_coeffs_n)
+        energy_filter_dose_neutron = openmc.EnergyFilter(energy_bins_n)
         
-      
-    def tallies_radial(self,):
-        print("################################################")
-        print("###########        Mesh Radial      ############")
-        print("################################################")
-        
-        # Variáveis reutilizaveis
-        
-        ## Quantidade de divisões radiais
-        self.t_divisions_radial_qtd = 1000
-        
-        ## Definindo todos meshs radiais do centro até a fronteira de vácuo
-        self.t_divisions_radial_r = np.linspace(
-            0.0,
-            self.fronteira_ar_lateral,
-            self.t_divisions_radial_qtd+1
-            ).tolist()
-        
-        ## Definindo a posição e altura de cada mesh radial
-        origin = []
-        if not hasattr(self, 't_divisions_radial_z'):
-            self.t_divisions_radial_z = []
-        if not hasattr(self, 't_tally_radial_name'):
-            self.t_tally_radial_name = []
-            
-        ### mesh = 0 (nível e tamanho da fonte)
-        #### posicao = centro da fonte em z
-        #### altura  = tamanho da fonte em z
-        posicao_z_fonte = (self.limite_fonte_superior + self.limite_fonte_inferior)/2
-        origin.append( (0,0,posicao_z_fonte) )
-        tamanho_z_fonte = self.limite_fonte_superior - self.limite_fonte_inferior
-        self.t_divisions_radial_z.append([ -tamanho_z_fonte/2, tamanho_z_fonte/2 ])
-        self.t_tally_radial_name.append("source level")
-        
-        ### mesh = 1 (nível solo, tamanho 1cm)
-        #### posicao = solo
-        #### altura  = 1cm
-        origin.append( (0,0,self.fundo_tanque_inferior) )
-        tamanho_z = 1
-        self.t_divisions_radial_z.append([ -tamanho_z/2, tamanho_z/2 ])
-        self.t_tally_radial_name.append("top level")
-        
-        ### mesh = 2 (nível superior tanque, tamanho 1cm)
-        #### posicao = superior tanque
-        #### altura  = 1cm
-        origin.append( (0,0,self.fundo_tanque_superior) )
-        tamanho_z = 1
-        self.t_divisions_radial_z.append([ -tamanho_z/2, tamanho_z/2 ])
-        self.t_tally_radial_name.append("down level")
-        # Definição automática dos filtros de Mesh's
-        mesh_filter_radial = []
-        for mesh in range(0,len(self.t_divisions_radial_z)):
-            mesh_filter_radial.append(
-                openmc.MeshFilter(
-                    openmc.CylindricalMesh(
-                        origin=origin[mesh],
-                        r_grid = (self.t_divisions_radial_r), 
-                        z_grid = (self.t_divisions_radial_z[mesh])
-                        )
-                    )
+        self.r_divisions_central_leak = [0,3.32/2]
+        self.z_divisions_central_leak = [(self.tanque_altura/2),(self.tanque_altura/2)+1]
+        mesh_leak_central_filter = openmc.MeshFilter(
+            openmc.CylindricalMesh(
+                r_grid = (self.r_divisions_central_leak),
+                z_grid = (self.z_divisions_central_leak)
                 )
+            )
+        
+        dose_tally_neutron_central = openmc.Tally(name='neutron_dose_mesh_leak_central',tally_id=4)
+        dose_tally_neutron_central.scores = ['flux']
+        dose_tally_neutron_central.filters = [mesh_leak_central_filter , neutron_particle_filter, energy_function_filter_n, energy_filter_dose_neutron]
 
-        # Se self.t_tally_radial não tiver sido criado ainda, crie uma lista vazia.
-        if not hasattr(self, 'tally_radial'):
-            self.t_tally_radial = []
+        # TOPO CENTRAL FÓTONS
+        if self.settings.photon_transport:
+            energy_bins_p, dose_coeffs_p = openmc.data.dose_coefficients(particle='photon', geometry='ISO')
+            energy_function_filter_p = openmc.EnergyFunctionFilter(energy_bins_p, dose_coeffs_p)
+            energy_filter_dose_photon  = openmc.EnergyFilter(energy_bins_p)
+            dose_tally_photon_central = openmc.Tally(name='photon_dose_mesh_leak_central',tally_id=3)
+            dose_tally_photon_central.scores = ['flux']
+            dose_tally_photon_central.filters = [mesh_leak_central_filter , photon_particle_filter, energy_function_filter_p, energy_filter_dose_photon]
 
-        # Interação para construção do tally com cada mesh e intervalo de energia
-        for mesh in range(0,len(mesh_filter_radial)):
-            self.t_tally_radial.append([])
-            for ge in range(0,len(self.t_energy_filter)):
-                tally_radial = openmc.Tally(name=f'MESH_Radial_{ge}_{mesh}')
-                tally_radial.filters.append(mesh_filter_radial[mesh])
-                tally_radial.filters.append(self.t_energy_filter[ge])
-                tally_radial.scores.append('flux')
-                self.t_tally_radial[-1].append(tally_radial)
-                self.t_tally_all.append(tally_radial)
+        # LATERAL ALTURA FONTE NEUTRONS
+        r_divisions_lateral_leak = [122/2, (122/2)+1]
+        z_divisions_lateral_leak = [self.centro_fonte-10, self.centro_fonte+10.0]
+        mesh_leak_lateral        = openmc.CylindricalMesh(r_grid = (r_divisions_lateral_leak), z_grid = (z_divisions_lateral_leak))
+        mesh_leak_lateral_filter = openmc.MeshFilter(mesh_leak_lateral)
+        dose_tally_neutron_lateral = openmc.Tally(name='neutron_dose_mesh_leak_lateral',tally_id=15) 
+        dose_tally_neutron_lateral.filters.append(energy_filter_dose_neutron) 
+        dose_tally_neutron_lateral.filters.append(neutron_particle_filter) 
+        dose_tally_neutron_lateral.filters.append(energy_function_filter_n)
+        dose_tally_neutron_lateral.filters.append(energy_filter_dose_neutron)
+        dose_tally_neutron_lateral.filters.append(mesh_leak_lateral_filter)
+        dose_tally_neutron_lateral.scores.append('flux')
 
-    def tallies_axial(self,):
-        print("################################################")
-        print("###########        Mesh Axial       ############")
-        print("################################################")
-        
-        # Variáveis reutilizaveis
-        
-        ## Quantidade de divisões axiais
-        self.t_divisions_axial_qtd = 1000
-        
-        ## Definindo todos meshs axiais do fronteira de vácuo inferior a superior
-        self.t_divisions_axial_z = np.linspace(
-            self.fronteira_ar_inferior,
-            self.fronteira_ar_superior,
-            self.t_divisions_axial_qtd
-            ).tolist()
-        
-        ## Definindo a posição e raio de cada mesh axial
-        origin = []
-        self.t_divisions_axial_r = []
-        
-        ### mesh = 0 (Tubo central)
-        #### posicao = centro do reator
-        #### raio    = diametro da vareta central
-        origin.append( (     0, 0, 0) )
-        self.t_divisions_axial_r.append([0, 3.32/2])
-        
-        ### mesh = 1 (Combustivel)
-        #### posicao = centro do combustivel mais perto do centro sentido +X
-        #### raio    = diametro interno do combustivel
-        origin.append( (2*2.54, 0, 0) )
-        self.t_divisions_axial_r.append([0, 1.47/2])
-        
-        # Definição automática dos filtros de Mesh's
-        mesh_filter_axial = []
-        for mesh in range(0,len(self.t_divisions_axial_r)):
-            mesh_filter_axial.append(
-                openmc.MeshFilter(
-                    openmc.CylindricalMesh(
-                        origin = origin[mesh],
-                        r_grid = (self.t_divisions_axial_r[mesh]), 
-                        z_grid = (self.t_divisions_axial_z)
-                        )
-                    )
+        if self.settings.photon_transport:
+            # LATERAL ALTURA FONTE FÓTONS
+            dose_tally_photon_lateral = openmc.Tally(name='photon_dose_mesh_leak_lateral',tally_id=16) 
+            dose_tally_photon_lateral.filters.append(energy_filter_dose_photon) 
+            dose_tally_photon_lateral.filters.append(photon_particle_filter) 
+            dose_tally_photon_lateral.filters.append(energy_function_filter_p)
+            dose_tally_photon_lateral.filters.append(energy_filter_dose_photon)
+            dose_tally_photon_lateral.filters.append(mesh_leak_lateral_filter)
+            dose_tally_photon_lateral.scores.append('flux')
+
+        # TOPO ACIMA DO COMBUSTIVEL NEUTRONS
+        r_divisions_top_comb_leak = [0,3.32/2]
+        mesh_axial_comb = openmc.CylindricalMesh(origin=(2*2.54,0,0),r_grid = (r_divisions_top_comb_leak), z_grid = (self.z_divisions_central_leak))
+        mesh_leak_top_comb_filter = openmc.MeshFilter(mesh_axial_comb)
+        dose_tally_neutron_top_comb = openmc.Tally(name='neutron_dose_mesh_leak_top_comb',tally_id=17) 
+        dose_tally_neutron_top_comb.filters.append(energy_filter_dose_neutron) 
+        dose_tally_neutron_top_comb.filters.append(neutron_particle_filter) 
+        dose_tally_neutron_top_comb.filters.append(energy_function_filter_n)
+        dose_tally_neutron_top_comb.filters.append(energy_filter_dose_neutron)
+        dose_tally_neutron_top_comb.filters.append(mesh_leak_top_comb_filter)
+        dose_tally_neutron_top_comb.scores.append('flux')
+
+        if self.settings.photon_transport:
+            # TOPO ACIMA DO COMBUSTIVEL FÓTONS
+            dose_tally_photon_top_comb = openmc.Tally(name='photon_dose_mesh_leak_top_comb',tally_id=18) 
+            dose_tally_photon_top_comb.filters.append(energy_filter_dose_photon) 
+            dose_tally_photon_top_comb.filters.append(photon_particle_filter) 
+            dose_tally_photon_top_comb.filters.append(energy_function_filter_p)
+            dose_tally_photon_top_comb.filters.append(energy_filter_dose_photon)
+            dose_tally_photon_top_comb.filters.append(mesh_leak_top_comb_filter)
+            dose_tally_photon_top_comb.scores.append('flux')
+
+        # TOPO ACIMA DO REATOR MÉDIA NEUTRONS
+        self.r_divisions_avarage_leak = [0,6.5]
+        self.z_divisions_avarage_leak = [(self.tanque_altura/2),(self.tanque_altura/2)+1]
+        mesh_leak_avarage_filter = openmc.MeshFilter(
+            openmc.CylindricalMesh(
+                r_grid = (self.r_divisions_avarage_leak),
+                z_grid = (self.z_divisions_avarage_leak)
                 )
+            )
+        
+        dose_tally_neutron_avarage = openmc.Tally(name='neutron_dose_mesh_leak_avarage',tally_id=80)
+        dose_tally_neutron_avarage.scores = ['flux']
+        dose_tally_neutron_avarage.filters = [mesh_leak_avarage_filter , neutron_particle_filter, energy_function_filter_n, energy_filter_dose_neutron]
 
-        # Se self.t_tally_axial não tiver sido criado ainda, crie uma lista vazia.
-        if not hasattr(self, 'tally_radial'):
-            self.t_tally_axial = []
-            
-        # Interação para construção do tally com cada mesh e intervalo de energia
-        for ge in range(0,len(self.t_energy_filter)):
-            for mesh in range(0,len(mesh_filter_axial)):
-                tally_axial = openmc.Tally(name=f'MESH_Axial_{ge}_{mesh}')
-                tally_axial.filters.append(self.t_energy_filter[ge])
-                tally_axial.filters.append(mesh_filter_axial[mesh])
-                tally_axial.scores.append('flux')
-                self.t_tally_axial.append(tally_axial)
-                self.t_tally_all.append(tally_axial)
-                
+        if self.settings.photon_transport:
+            # TOPO ACIMA DO REATOR MÉDIA FÓTONS
+            dose_tally_photon_avarage = openmc.Tally(name='photon_dose_mesh_leak_avarage',tally_id=70) 
+            dose_tally_photon_avarage.filters.append(energy_filter_dose_photon) 
+            dose_tally_photon_avarage.filters.append(photon_particle_filter) 
+            dose_tally_photon_avarage.filters.append(energy_function_filter_p)
+            dose_tally_photon_avarage.filters.append(energy_filter_dose_photon)
+            dose_tally_photon_avarage.filters.append(mesh_leak_avarage_filter)
+            dose_tally_photon_avarage.scores.append('flux')
 
-    def tallies_carteziano(self,):
-        print("################################################")
-        print("###########     Mesh Carteziano     ############")
-        print("################################################")
-        
-        # Variáveis reutilizaveis
-        
-        ## Quantidade de divisões em cada dimensão
-        self.t_divisions_cubico_qtd = 100
-        
-        ## Definição todos meshs cartezianos com indo da fronteira de vácuo de um lado a outro
-        self.t_divisions_cubico_xy = np.linspace(
-            -self.fronteira_ar_lateral,
-            self.fronteira_ar_lateral,
-            self.t_divisions_cubico_qtd
-            ).tolist()
-        
-        self.t_divisions_cubico_z = [self.limite_fonte_inferior,self.limite_fonte_superior] #np.linspace( self.fronteira_ar_inferior,self.fronteira_ar_superior,101).tolist() 
-        
-        # Definição mesh separadamente como uma variavel para poder alterar atributos
-        mesh_cubico = openmc.RectilinearMesh()
-        mesh_cubico.x_grid = self.t_divisions_cubico_xy
-        mesh_cubico.y_grid = self.t_divisions_cubico_xy
-        mesh_cubico.z_grid = self.t_divisions_cubico_z
-        
-        # Definição de filtro mesh
-        mesh_filter_cubico = openmc.MeshFilter(mesh_cubico)
-        
-        # Se self.t_tally_cubico não tiver sido criado ainda, crie uma lista vazia.
-        if not hasattr(self, 'tally_cubico'):
-            self.t_tally_cubico = []
-            
-        # Interação para construção do tally com cada mesh e intervalo de energia
-        for ge in range(0,len(self.t_energy_filter)):
-            tally_cubico = openmc.Tally(name=f'MESH_Cubico_{ge}')
-            tally_cubico.filters.append(self.t_energy_filter[ge])
-            tally_cubico.filters.append(mesh_filter_cubico)
-            tally_cubico.scores.append('flux')
-            self.t_tally_cubico.append(tally_cubico)
-            self.t_tally_all.append(tally_cubico)
-            
-    
-    def tallies_espectro(self,):
         print("################################################")
         print("###########         Espectro        ############")
         print("################################################")
         
-        # Se self.self.t_tally_espectro não tiver sido criado ainda, crie uma lista vazia.
-        if not hasattr(self, 't_tally_espectro'):
-            self.t_tally_espectro = []
-        
-        tally_espectro = openmc.Tally(name='Fluxo no universo combustível')
-        tally_espectro.filters.append(openmc.CellFilter(self.celula_combustivel))
-        tally_espectro.filters.append(self.t_energy_filter_espectrum)
-        tally_espectro.scores.append('flux')
-        self.t_tally_espectro.append(tally_espectro)
-        self.t_tally_all.append(tally_espectro)
+        energy = np.logspace(-5, np.log10(11E06), num=151)
+        #energy = [1.0000E-05, 1.0, 5.0E+03, 20.0E+06]
+        energy_filter = openmc.EnergyFilter(energy)
 
-    def process_tallies_espectro(self):
+        # ESPECTRO COMUM MÉDIO INTERNO AO COMBUSTÍVEL
+        tally_spectrum_fuel = openmc.Tally(name='Fluxo espectro interno comb',tally_id=5) # F34
+        tally_spectrum_fuel.scores.append('flux')
+        tally_spectrum_fuel.filters.append(energy_filter)
+        tally_spectrum_fuel.filters.append(neutron_particle_filter)
+        tally_spectrum_fuel.filters.append(
+            openmc.MeshFilter(
+                openmc.CylindricalMesh(
+                    r_grid=(0, 1.47/2), #De 0 ao raio interno do combustivel
+                    z_grid=(self.centro_fonte-10, self.centro_fonte+10), #No nivel da fonte
+                    origin=(2*2.54,0,0)
+                    )
+                )
+            )
+
+        # ESPECTRO COMUM ACIMA FONTE
+        
+        tally_spectrum_central = openmc.Tally(name='Fluxo espectro acima fonte',tally_id=50) # F34
+        tally_spectrum_central.scores.append('flux')
+        tally_spectrum_central.filters.append(energy_filter)
+        tally_spectrum_central.filters.append(neutron_particle_filter)
+        tally_spectrum_central.filters.append(
+            openmc.MeshFilter(
+                openmc.CylindricalMesh(
+                    r_grid=(0, 1.5), #De 0 ao raio interno do tubo central
+                    z_grid=(self.centro_fonte+10, self.centro_fonte+10+1),#do topo da fonte a 1cm acima da fonte
+                    )
+                )
+            )
+
+
         print("################################################")
-        print("########    Process Tallies Espectro   #########")
+        print("###########        Mesh Radial      ############")
         print("################################################")
-        
-        sp = openmc.StatePoint('statepoint.'+str(self.s_settings.batches)+'.h5')
-        
-        flux_espectro_fuel = sp.get_tally(scores=['flux'], name='Fluxo no universo combustível')
-        flux_espectro_mean = flux_espectro_fuel.mean
-        flux_espectro_dev  = flux_espectro_fuel.std_dev
-        
-        print()
-        print(' Espectro de fluxo:')
-        print()
+        divisions_radial = 1000
+        r_divisions_radial = np.linspace(0.0,self.fronteira_ar_lateral,divisions_radial+1).tolist()    
+        z_divisions_radial = [self.limite_fonte_inferior,self.limite_fonte_superior]
+        mesh_radial = openmc.CylindricalMesh(r_grid = (r_divisions_radial), z_grid = (z_divisions_radial))
+        mesh_filter_radial = openmc.MeshFilter(mesh_radial)
 
-        flux_espectro = []
-        flux_dev_espectro = []
-        flux_energy = []
+        tally_radial_thermal = openmc.Tally(name='MESH_Radial_Termico',tally_id=6)
+        tally_radial_thermal.filters.append(mesh_filter_radial)
+        tally_radial_thermal.filters.append(energy_filter_thermal)
+        tally_radial_thermal.filters.append(neutron_particle_filter)
+        tally_radial_thermal.scores.append('flux')
 
-        # Espectro 
-        r2 = 2.87
-        r1 = 1.47
-        h = 20.45
-        qtd = 1410
-        V=h*qtd*(np.pi*r2**2-np.pi*r1**2)
+        tally_radial_fast = openmc.Tally(name='MESH_Radial_Rapido',tally_id=7)
+        tally_radial_fast.filters.append(mesh_filter_radial)
+        tally_radial_fast.filters.append(energy_filter_fast)
+        tally_radial_fast.filters.append(neutron_particle_filter)
+        tally_radial_fast.scores.append('flux')
 
-        for i in range(0,len(self.t_energy_filter_espectrum)-1):
-            fluxo = self.atividade*flux_espectro_mean[i][0][0]/V
-            incerteza = self.atividade*flux_espectro_dev[i][0][0]/V
-            if incerteza/fluxo < 0.05:
-                flux_espectro.append(fluxo)
-                flux_dev_espectro.append(incerteza)
-                flux_energy.append(self.t_energy_filter_espectrum[i+1])
-                print(" Intervalo ", i,": ","\t", format(flux_espectro[-1], '.4e'), "+/-", format(flux_dev_espectro[-1], '.4e'), "[neutron/cm².s]")
+        #tally_radial_fonte = openmc.Tally(name='MESH_Radial_Fonte',tally_id=8)
+        #tally_radial_fonte.filters.append(mesh_filter_radial)
+        #tally_radial_fonte.filters.append(energy_filter_fonte)
+        #tally_radial_fonte.scores.append('flux')
 
-    def process_tallies_radial(self):
         print("################################################")
-        print("########     Process Tallies Radial    #########")
+        print("###########        Mesh Axial       ############")
         print("################################################")
-        sp = openmc.StatePoint('statepoint.'+str(self.s_settings.batches)+'.h5')
-        
-        # Se self.t_tally_radial existir
-        if hasattr(self, 't_tally_radial'):
-            flux_radial = []
-            for mesh in range(0,len(self.t_tally_radial)):
-                flux_radial.append([])  # Adiciona uma nova lista para cada mesh
-                for ge in range(0,len(self.t_energy_filter)):
-                    print(f'MESH_Radial_{ge}_{mesh}')
-                    flux_radial[mesh].append(sp.get_tally(scores=['flux'], name=f'MESH_Radial_{ge}_{mesh}'))
-        else:
-            print("Não foi possível trabalhar tallies_radial pois self.t_tally_radial está vazio")
-            return
-        
-        flux_norm_rad     = []  # Vetores para armazenar resultados
-        flux_norm_rad_dev = []
-        flux_norm_rad_r   = []
-        
-        # Iterar para cada mesh, em cada grupo de energia, para cada intervalo, o normalizando
-        # e deletando caso a incerteza seja maior que 5% 
-        for mesh in range(0,len(self.t_tally_radial)):
-            flux_norm_rad.append([])
-            flux_norm_rad_dev.append([])
-            flux_norm_rad_r.append([])
+        divisions_axial = 1000
+        z_divisions_axial = np.linspace(self.fronteira_ar_inferior,self.fronteira_ar_superior,divisions_axial+1).tolist()    
+        r_divisions_axial_central = [0,3.32/2]
+        mesh_axial_central = openmc.CylindricalMesh(r_grid = (r_divisions_axial_central), z_grid = (z_divisions_axial))
+        mesh_filter_axial_central = openmc.MeshFilter(mesh_axial_central)
+
+        tally_axial_central_thermal = openmc.Tally(name='MESH_Axial_Central_Thermal',tally_id=9)
+        tally_axial_central_thermal.filters.append(energy_filter_thermal)
+        tally_axial_central_thermal.filters.append(mesh_filter_axial_central)
+        tally_axial_central_thermal.filters.append(neutron_particle_filter)
+        tally_axial_central_thermal.scores.append('flux')
+
+        r_divisions_axial_comb = [0,1.47/2]
+        mesh_axial_comb = openmc.CylindricalMesh(origin=(2*2.54,0,0),r_grid = (r_divisions_axial_comb), z_grid = (z_divisions_axial))
+        mesh_filter_axial_comb = openmc.MeshFilter(mesh_axial_comb)
+
+        tally_axial_comb_thermal = openmc.Tally(name='MESH_Axial_Comb_Thermal',tally_id=10)
+        tally_axial_comb_thermal.filters.append(energy_filter_thermal)
+        tally_axial_comb_thermal.filters.append(mesh_filter_axial_comb)
+        tally_axial_comb_thermal.filters.append(neutron_particle_filter)
+        tally_axial_comb_thermal.scores.append('flux')
+
+        tally_axial_central_fast = openmc.Tally(name='MESH_Axial_Central_Fast',tally_id=11)
+        tally_axial_central_fast.filters.append(energy_filter_fast)
+        tally_axial_central_fast.filters.append(mesh_filter_axial_central)
+        tally_axial_central_fast.filters.append(neutron_particle_filter)
+        tally_axial_central_fast.scores.append('flux')
+
+        tally_axial_comb_fast = openmc.Tally(name='MESH_Axial_Comb_Fast',tally_id=12)
+        tally_axial_comb_fast.filters.append(energy_filter_fast)
+        tally_axial_comb_fast.filters.append(mesh_filter_axial_comb)
+        tally_axial_comb_fast.filters.append(neutron_particle_filter)
+        tally_axial_comb_fast.scores.append('flux')
+
+        print("################################################")
+        print("###########        Mesh Cubico      ############")
+        print("################################################")
+        divisions_cubico = 284
+        x_divisions = np.linspace(-self.fronteira_ar_lateral,self.fronteira_ar_lateral,divisions_cubico+1).tolist()
+        y_divisions = np.linspace(-self.fronteira_ar_lateral,self.fronteira_ar_lateral,divisions_cubico+1).tolist()  
+        z_divisions = [self.limite_fonte_inferior,self.limite_fonte_superior] #np.linspace( self.fronteira_ar_inferior,self.fronteira_ar_superior,101).tolist() 
+        mesh_cubico = openmc.RectilinearMesh()
+        mesh_cubico.x_grid = x_divisions
+        mesh_cubico.y_grid = y_divisions
+        mesh_cubico.z_grid = z_divisions
+        mesh_filter_cubico = openmc.MeshFilter(mesh_cubico)
+        # TERMICO
+        tally_cubico_termico = openmc.Tally(name='MESH_Cubico_Termico',tally_id=13)
+        tally_cubico_termico.filters.append(mesh_filter_cubico)
+        tally_cubico_termico.filters.append(energy_filter_thermal)
+        tally_cubico_termico.filters.append(neutron_particle_filter)
+        tally_cubico_termico.scores.append('flux')
+        # RAPIDO
+        tally_cubico_rapido = openmc.Tally(name='MESH_Cubico_Rapido',tally_id=19)
+        tally_cubico_rapido.filters.append(mesh_filter_cubico)
+        tally_cubico_rapido.filters.append(energy_filter_fast)
+        tally_cubico_rapido.filters.append(neutron_particle_filter)
+        tally_cubico_rapido.scores.append('flux')
+
+        ###############################################################################################################
+        divisions_rc = 1000
+        x_divisions_rc = np.linspace(0,self.fronteira_ar_lateral,divisions_rc+1).tolist()
+        y_divisions_rc = [-1.47/2, 1.47/2] #diametro interno do anel do combustivel
+        z_divisions_rc = [self.limite_fonte_inferior,self.limite_fonte_superior] 
+        mesh_cubico_rc = openmc.RectilinearMesh()
+        mesh_cubico_rc.x_grid = x_divisions_rc
+        mesh_cubico_rc.y_grid = y_divisions_rc
+        mesh_cubico_rc.z_grid = z_divisions_rc
+        mesh_filter_cubico_rc = openmc.MeshFilter(mesh_cubico_rc)
+        # TERMICO
+        tally_cubico_termico_rc = openmc.Tally(name='MESH_Cubico_Termico_rc',tally_id=20)
+        tally_cubico_termico_rc.filters.append(mesh_filter_cubico_rc)
+        tally_cubico_termico_rc.filters.append(energy_filter_thermal)
+        tally_cubico_termico_rc.filters.append(neutron_particle_filter)
+        tally_cubico_termico_rc.scores.append('flux')
+        # RAPIDO
+        tally_cubico_rapido_rc = openmc.Tally(name='MESH_Cubico_Rapido_rc',tally_id=21)
+        tally_cubico_rapido_rc.filters.append(mesh_filter_cubico_rc)
+        tally_cubico_rapido_rc.filters.append(energy_filter_fast)
+        tally_cubico_rapido_rc.filters.append(neutron_particle_filter)
+        tally_cubico_rapido_rc.scores.append('flux')
+
+        ############## Coleção de tallies ##############
+        vetor_tallies = []
+        vetor_tallies.append(tally_axial_central_thermal)
+        vetor_tallies.append(tally_axial_central_fast)
+        vetor_tallies.append(tally_axial_comb_thermal)
+        vetor_tallies.append(tally_axial_comb_fast)
+        vetor_tallies.append(tally_cubico_termico)
+        vetor_tallies.append(tally_cubico_rapido)
+        vetor_tallies.append(tally_cubico_termico_rc)
+        vetor_tallies.append(tally_cubico_rapido_rc)
+        vetor_tallies.append(tally_spectrum_central)
+        vetor_tallies.append(tally_spectrum_fuel)
+        vetor_tallies.append(tally_radial_thermal)
+        vetor_tallies.append(tally_radial_fast)
+        #vetor_tallies.append(tally_radial_fonte)
+        vetor_tallies.append(tally_fission)
+        vetor_tallies.append(tally_nu)
+        vetor_tallies.append(dose_tally_neutron_central)
+        vetor_tallies.append(dose_tally_neutron_lateral)
+        vetor_tallies.append(dose_tally_neutron_top_comb)
+        vetor_tallies.append(dose_tally_neutron_avarage)
+        if self.settings.photon_transport:
+            vetor_tallies.append(dose_tally_photon_central)
+            vetor_tallies.append(dose_tally_photon_lateral)
+            vetor_tallies.append(dose_tally_photon_top_comb)
+            vetor_tallies.append(dose_tally_photon_avarage)
+        tallies = openmc.Tallies(vetor_tallies)
+        if simu:
+            tallies.export_to_xml()
+            self.run()
+        if self.fonte:
+            print("################################################")
+            print("########  Trabalhando dados com fonte  #########")
+            print("################################################")
+            sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
+
+            uncertainty = 0.10
+
+            # Acesse os resultados do tally radial
+            nu                   = sp.get_tally(scores=['nu-fission'])
+            fission              = sp.get_tally(scores=['fission'])
+            flux_radial_thermal  = sp.get_tally(scores=['flux'], name='MESH_Radial_Termico')
+            flux_radial_fast     = sp.get_tally(scores=['flux'], name='MESH_Radial_Rapido')
+            #flux_radial_fonte     = sp.get_tally(scores=['flux'], name='MESH_Radial_Fonte')
+
+            flux_espectro_fuel   = sp.get_tally(scores=['flux'], name='Fluxo espectro interno comb')
+            flux_espectro_central   = sp.get_tally(scores=['flux'], name='Fluxo espectro acima fonte')
+
+            flux_cubico_thermal        = sp.get_tally(scores=['flux'], name='MESH_Cubico_Termico')
+            flux_cubico_fast           = sp.get_tally(scores=['flux'], name='MESH_Cubico_Rapido')
+            flux_cubico_thermal_rc     = sp.get_tally(scores=['flux'], name='MESH_Cubico_Termico_rc')
+            flux_cubico_fast_rc        = sp.get_tally(scores=['flux'], name='MESH_Cubico_Rapido_rc')
+
+            flux_axial_comb_thermal    = sp.get_tally(scores=['flux'], name='MESH_Axial_Comb_Thermal')
+            flux_axial_central_thermal = sp.get_tally(scores=['flux'], name='MESH_Axial_Central_Thermal')
+            flux_axial_comb_fast       = sp.get_tally(scores=['flux'], name='MESH_Axial_Comb_Fast')
+            flux_axial_central_fast    = sp.get_tally(scores=['flux'], name='MESH_Axial_Central_Fast')
+
+            dose_n_central             = sp.get_tally(scores=['flux'], name='neutron_dose_mesh_leak_central')
+            dose_n_lateral             = sp.get_tally(scores=['flux'], name='neutron_dose_mesh_leak_lateral')
+            dose_n_top_comb            = sp.get_tally(scores=['flux'], name='neutron_dose_mesh_leak_top_comb')
+            dose_n_avarage             = sp.get_tally(scores=['flux'], name='neutron_dose_mesh_leak_avarage')
+            if self.settings.photon_transport:
+                dose_p_central         = sp.get_tally(scores=['flux'], name='photon_dose_mesh_leak_central')
+                dose_p_lateral         = sp.get_tally(scores=['flux'], name='photon_dose_mesh_leak_lateral')
+                dose_p_top_comb        = sp.get_tally(scores=['flux'], name='photon_dose_mesh_leak_top_comb')
+                dose_p_avarage         = sp.get_tally(scores=['flux'], name='photon_dose_mesh_leak_avarage')
+
+            # Tallies básicos
+            nu_mean                 = nu.mean
+            nu_std_dev              = nu.std_dev
+            fission_mean            = fission.mean
+            fission_std_dev         = fission.std_dev
+            # Espectro
+            flux_espectro_fuel_mean    = flux_espectro_fuel.mean
+            flux_espectro_fuel_dev     = flux_espectro_fuel.std_dev
+            flux_espectro_central_mean = flux_espectro_central.mean
+            flux_espectro_central_dev  = flux_espectro_central.std_dev
+            # Mesh Radial
+            #flux_rad_fonte_mean     = flux_radial_fonte.mean
+            #flux_rad_fonte_dev      = flux_radial_fonte.std_dev
+            flux_rad_fast_mean      = flux_radial_fast.mean
+            flux_rad_fast_dev       = flux_radial_fast.std_dev
+            flux_rad_thermal_mean   = flux_radial_thermal.mean
+            flux_rad_thermal_dev    = flux_radial_thermal.std_dev
+            # Mesh Cúbico
+            flux_cub_thermal        = flux_cubico_thermal.mean
+            flux_cub_thermal_dev    = flux_cubico_thermal.std_dev
+            flux_cub_fast           = flux_cubico_fast.mean
+            flux_cub_fast_dev       = flux_cubico_fast.std_dev
+            flux_cub_thermal_rc     = flux_cubico_thermal_rc.mean
+            flux_cub_thermal_dev_rc = flux_cubico_thermal_rc.std_dev
+            flux_cub_fast_rc        = flux_cubico_fast_rc.mean
+            flux_cub_fast_dev_rc    = flux_cubico_fast_rc.std_dev
+            # Mesh Axial
+            flux_axial_comb_thermal_mean    = flux_axial_comb_thermal.mean
+            flux_axial_comb_thermal_dev     = flux_axial_comb_thermal.std_dev
+            flux_axial_central_thermal_mean = flux_axial_central_thermal.mean
+            flux_axial_central_thermal_dev  = flux_axial_central_thermal.std_dev
+            flux_axial_comb_fast_mean       = flux_axial_comb_fast.mean
+            flux_axial_comb_fast_dev        = flux_axial_comb_fast.std_dev
+            flux_axial_central_fast_mean    = flux_axial_central_fast.mean
+            flux_axial_central_fast_dev     = flux_axial_central_fast.std_dev
+            # Taxas de dose
+            dose_n_central_mean             = dose_n_central.mean
+            dose_n_central_dev              = dose_n_central.std_dev
+            dose_n_lateral_mean             = dose_n_lateral.mean
+            dose_n_lateral_dev              = dose_n_lateral.std_dev
+            dose_n_top_comb_mean            = dose_n_top_comb.mean
+            dose_n_top_comb_dev             = dose_n_top_comb.std_dev
+            dose_n_avarage_mean             = dose_n_avarage.mean
+            dose_n_avarage_dev              = dose_n_avarage.std_dev
+            if self.settings.photon_transport:
+                dose_p_central_mean             = dose_p_central.mean
+                dose_p_central_dev              = dose_p_central.std_dev
+                dose_p_lateral_mean             = dose_p_lateral.mean
+                dose_p_lateral_dev              = dose_p_lateral.std_dev
+                dose_p_top_comb_mean            = dose_p_top_comb.mean
+                dose_p_top_comb_dev             = dose_p_top_comb.std_dev
+                dose_p_avarage_mean             = dose_p_avarage.mean
+                dose_p_avarage_dev              = dose_p_avarage.std_dev
+
+            ### TAXAS DE DOSE ###
+            # Volume de fuga central no topo do reator
+            volume_dose_central = np.pi * (self.z_divisions_central_leak[1]-self.z_divisions_central_leak[0]) * (self.r_divisions_central_leak[1]**2)
+            # Volume de fuga lateral 
+            r2 = (122/2)+1
+            r1 = 122/2
+            h = 20
+            volume_dose_lateral = h*(np.pi*r2**2-np.pi*r1**2)
+            # Volume de fuga acima do combustível mais perto do centro
+            volume_dose_top_comb = np.pi * (self.z_divisions_central_leak[1]-self.z_divisions_central_leak[0]) * (self.r_divisions_central_leak[1]**2)
+            # Volume de fuga mpedio do topo
+            volume_dose_top_avarage = np.pi * (self.z_divisions_central_leak[1]-self.z_divisions_central_leak[0]) * (6.5**2)
+
+            dose_central_n = []
+            dose_central_n_dev = []
+            dose_central_n_energy = []
+
+            # NÊUTRONS
+            for i in range(0,len(dose_n_central_mean)):
+                dose=self.atividade*dose_n_central_mean[i][0][0]/volume_dose_central
+                incerteza=self.atividade*dose_n_central_dev[i][0][0]/volume_dose_central
+                if incerteza/dose < uncertainty:
+                    dose_central_n.append(dose)
+                    dose_central_n_dev.append(incerteza)
+                    dose_central_n_energy.append(energy_bins_n[i])
+            print("dose_central_n", np.sum(dose_central_n))
+
+            dose_lateral_n = []
+            dose_lateral_n_dev = []
+            dose_lateral_n_energy = []
+
+            for i in range(0,len(dose_n_lateral_mean)):
+                dose=self.atividade*dose_n_lateral_mean[i][0][0]/volume_dose_lateral
+                incerteza=self.atividade*dose_n_lateral_dev[i][0][0]/volume_dose_lateral
+                if incerteza/dose < uncertainty:
+                    dose_lateral_n.append(dose)
+                    dose_lateral_n_dev.append(incerteza)
+                    dose_lateral_n_energy.append(energy_bins_n[i])
+            print("dose_lateral_n", np.sum(dose_lateral_n))
+
+            dose_top_comb_n = []
+            dose_top_comb_n_dev = []
+            dose_top_comb_n_energy = []
+
+            for i in range(0,len(dose_n_top_comb_mean)):
+                dose=self.atividade*dose_n_top_comb_mean[i][0][0]/volume_dose_top_comb
+                incerteza=self.atividade*dose_n_top_comb_dev[i][0][0]/volume_dose_top_comb
+                if incerteza/dose < uncertainty:
+                    dose_top_comb_n.append(dose)
+                    dose_top_comb_n_dev.append(incerteza)
+                    dose_top_comb_n_energy.append(energy_bins_n[i])
+            print("dose_top_comb_n", np.sum(dose_top_comb_n))
+
+            dose_avarage_n = []
+            dose_avarage_n_dev = []
+            dose_avarage_n_energy = []
+
+            for i in range(0,len(dose_n_avarage_mean)):
+                dose=self.atividade*dose_n_avarage_mean[i][0][0]/volume_dose_top_avarage
+                incerteza=self.atividade*dose_n_avarage_dev[i][0][0]/volume_dose_top_avarage
+                if incerteza/dose < uncertainty:
+                    dose_avarage_n.append(dose)
+                    dose_avarage_n_dev.append(incerteza)
+                    dose_avarage_n_energy.append(energy_bins_n[i])
+            print("dose_avarage_n", np.sum(dose_avarage_n))
+
+            # FÓTONS
+            if self.settings.photon_transport:
+
+                dose_central_p = []
+                dose_central_p_dev = []
+                dose_central_p_energy = []
+
+                for i in range(0,len(dose_p_central_mean)):
+                    dose=self.atividade*dose_p_central_mean[i][0][0]/volume_dose_central
+                    incerteza=self.atividade*dose_p_central_dev[i][0][0]/volume_dose_central
+                    if incerteza/dose < uncertainty:
+                        dose_central_p.append(dose)
+                        dose_central_p_dev.append(incerteza)
+                        dose_central_p_energy.append(energy_bins_p[i])
+                print("dose_central_p", np.sum(dose_central_p))
+
+                dose_lateral_p = []
+                dose_lateral_p_dev = []
+                dose_lateral_p_energy = []
+
+                for i in range(0,len(dose_p_lateral_mean)):
+                    dose=self.atividade*dose_p_lateral_mean[i][0][0]/volume_dose_lateral
+                    incerteza=self.atividade*dose_p_lateral_dev[i][0][0]/volume_dose_lateral
+                    if incerteza/dose < uncertainty:
+                        dose_lateral_p.append(dose)
+                        dose_lateral_p_dev.append(incerteza)
+                        dose_lateral_p_energy.append(energy_bins_p[i])
+                print("dose_lateral_p", np.sum(dose_lateral_p))
+                
+                dose_top_comb_p = []
+                dose_top_comb_p_dev = []
+                dose_top_comb_p_energy = []
+
+                for i in range(0,len(dose_p_top_comb_mean)):
+                    dose=self.atividade*dose_p_top_comb_mean[i][0][0]/volume_dose_top_comb
+                    incerteza=self.atividade*dose_p_top_comb_dev[i][0][0]/volume_dose_top_comb
+                    if incerteza/dose < uncertainty:
+                        dose_top_comb_p.append(dose)
+                        dose_top_comb_p_dev.append(incerteza)
+                        dose_top_comb_p_energy.append(energy_bins_p[i])
+                print("dose_top_comb_p", np.sum(dose_top_comb_p))
+
+                dose_avarage_p = []
+                dose_avarage_p_dev = []
+                dose_avarage_p_energy = []
+
+                for i in range(0,len(dose_p_avarage_mean)):
+                    dose=self.atividade*dose_p_avarage_mean[i][0][0]/volume_dose_top_avarage
+                    incerteza=self.atividade*dose_p_avarage_dev[i][0][0]/volume_dose_top_avarage
+                    if incerteza/dose < uncertainty:
+                        dose_avarage_p.append(dose)
+                        dose_avarage_p_dev.append(incerteza)
+                        dose_avarage_p_energy.append(energy_bins_p[i])
+                print("dose_avarage_p", np.sum(dose_avarage_p))
+
+            ### MESH AXIAL ###
+            # Volumes das areas do mesh axial central
+            volume_axial_central = []
+            for i in range(0, divisions_axial):  # Use o número apropriado de intervalos
+                z1 = z_divisions_axial[i]
+                z2 = z_divisions_axial[i + 1]
+                r = r_divisions_axial_central[1] - r_divisions_axial_central[0]
+                volume_axial_central.append(np.pi * (z2 - z1) * r**2)
+
+            # Volumes das areas do mesh axial comb
+            volume_axial_comb = []
+            for i in range(0, divisions_axial):  # Use o número apropriado de intervalos
+                z1 = z_divisions_axial[i]
+                z2 = z_divisions_axial[i + 1]
+                r = r_divisions_axial_comb[1] - r_divisions_axial_comb[0]
+                volume_axial_comb.append(np.pi * (z2 - z1) * r**2)
+
+            fluxo_axial_central_thermal = []
+            fluxo_axial_central_thermal_dev = []
+            fluxo_z_central_thermal = []
+
+            print()
+            print(' MESH axial central thermal:')
+            for i in range(0,divisions_axial):
+                fluxo=self.atividade*flux_axial_central_thermal_mean[i][0][0]/volume_axial_central[i]
+                incerteza=self.atividade*flux_axial_central_thermal_dev[i][0][0]/volume_axial_central[i]
+                if incerteza/fluxo < uncertainty:
+                    if z_divisions_axial[i]>self.centro_fonte+10 or z_divisions_axial[i]<self.centro_fonte-10:
+                        fluxo_axial_central_thermal.append(fluxo)
+                        fluxo_axial_central_thermal_dev.append(incerteza)
+                        fluxo_z_central_thermal.append(z_divisions_axial[i])
+
+            print(self.centro_fonte+10 , "\t", self.centro_fonte-10)
+            print(self.centro_fonte)
+            fluxo_axial_comb_thermal = []
+            fluxo_axial_comb_thermal_dev = []
+            fluxo_z_comb_thermal = []
+
+            print()
+            print(' MESH axial comb thermal:')
+            for i in range(0,divisions_axial):
+                fluxo=self.atividade*flux_axial_comb_thermal_mean[i][0][0]/volume_axial_comb[i]
+                incerteza=self.atividade*flux_axial_comb_thermal_dev[i][0][0]/volume_axial_comb[i]
+                if incerteza/fluxo < uncertainty:
+                    fluxo_axial_comb_thermal.append(fluxo)
+                    fluxo_axial_comb_thermal_dev.append(incerteza)
+                    fluxo_z_comb_thermal.append(z_divisions_axial[i])
             
+            fluxo_axial_central_fast = []
+            fluxo_axial_central_fast_dev = []
+            fluxo_z_central_fast = []
+
+            print()
+            print(' MESH axial central fast:')
+            for i in range(0,divisions_axial):
+                fluxo=self.atividade*flux_axial_central_fast_mean[i][0][0]/volume_axial_central[i]
+                incerteza=self.atividade*flux_axial_central_fast_dev[i][0][0]/volume_axial_central[i]
+                if incerteza/fluxo < uncertainty:
+                    if z_divisions_axial[i]>self.centro_fonte+10 or z_divisions_axial[i]<self.centro_fonte-10:
+                        fluxo_axial_central_fast.append(fluxo)
+                        fluxo_axial_central_fast_dev.append(incerteza)
+                        fluxo_z_central_fast.append(z_divisions_axial[i])
+
+            fluxo_axial_comb_fast = []
+            fluxo_axial_comb_fast_dev = []
+            fluxo_z_comb_fast = []
+
+            print()
+            print(' MESH axial comb fast:')
+            for i in range(0,divisions_axial):
+                fluxo=self.atividade*flux_axial_comb_fast_mean[i][0][0]/volume_axial_comb[i]
+                incerteza=self.atividade*flux_axial_comb_fast_dev[i][0][0]/volume_axial_comb[i]
+                if incerteza/fluxo < uncertainty:
+                    fluxo_axial_comb_fast.append(fluxo)
+                    fluxo_axial_comb_fast_dev.append(incerteza)
+                    fluxo_z_comb_fast.append(z_divisions_axial[i])
+
+            ### MESH CÚBICO ###
+            print()
+            print(' MESH cúbico termico:')
+            V = (x_divisions[1]-x_divisions[0])*(y_divisions[1]-y_divisions[0])*(z_divisions[1]-z_divisions[0])
+            amplitude_thermal = self.atividade*flux_cub_thermal.reshape((divisions_cubico, divisions_cubico))/V
+            amplitude_thermal_dev = self.atividade*flux_cub_thermal_dev.reshape((divisions_cubico, divisions_cubico))/V
+            amplitude_thermal_dev_per = np.zeros((len(amplitude_thermal_dev),len(amplitude_thermal_dev)))
+            for i in range(0,divisions_cubico-1):
+                for j in range(0,divisions_cubico-1):
+                    if amplitude_thermal[i][j] != 0:
+                        amplitude_thermal_dev_per[i][j] = amplitude_thermal_dev[i][j] / amplitude_thermal[i][j]
+                        if amplitude_thermal_dev_per[i][j] > uncertainty:
+                            amplitude_thermal[i][j] = None
+                    else:
+                        amplitude_thermal_dev_per[i][j] = 1
+                        amplitude_thermal[i][j] = None
+
+            print()
+            print(' MESH cúbico rapido:')
+            V = (x_divisions[1]-x_divisions[0])*(y_divisions[1]-y_divisions[0])*(z_divisions[1]-z_divisions[0])
+            amplitude_fast = self.atividade*flux_cub_fast.reshape((divisions_cubico, divisions_cubico))/V
+            amplitude_fast_dev = self.atividade*flux_cub_fast_dev.reshape((divisions_cubico, divisions_cubico))/V
+            amplitude_fast_dev_per = np.zeros((len(amplitude_fast_dev),len(amplitude_fast_dev)))
+            for i in range(0,divisions_cubico-1):
+                for j in range(0,divisions_cubico-1):
+                    if amplitude_fast[i][j] != 0:
+                        amplitude_fast_dev_per[i][j] = amplitude_fast_dev[i][j] / amplitude_fast[i][j]
+                        if amplitude_fast_dev_per[i][j] > uncertainty:
+                            amplitude_fast[i][j] = None
+                    else:
+                        amplitude_fast_dev_per[i][j] = 1
+                        amplitude_fast[i][j] = None
+
+            ### ESPECTRO DO COMBUSTÍVEL ###
+            print()
+            print(' Espectro de fluxo:')
+            print()
+
+            flux_spec_fuel_mean      = []
+            flux_spec_fuel_dev       = []
+            flux_spec_fuel_energy    = []
+
+
+
+            V=20*np.pi*(1.47/2)**2
+
+            for i in range(0,len(energy)-1):
+                fluxo = self.atividade*flux_espectro_fuel_mean[i][0][0]/V
+                incerteza = self.atividade*flux_espectro_fuel_dev[i][0][0]/V
+                if incerteza/fluxo < uncertainty:
+                    flux_spec_fuel_mean.append(fluxo)
+                    flux_spec_fuel_dev.append(incerteza)
+                    flux_spec_fuel_energy.append(energy[i+1])
+                    #print(" Intervalo ", i,": ","\t", format(flux_espectro[-1], '.4e'), "+/-", format(flux_dev_espectro[-1], '.4e'), "[neutron/cm².s]")
+
+            V=1*np.pi*1.5**2
+            flux_spec_central_mean   = []
+            flux_spec_central_dev    = []
+            flux_spec_central_energy = []
+            for i in range(0,len(energy)-1):
+                fluxo = self.atividade*flux_espectro_central_mean[i][0][0]/V
+                incerteza = self.atividade*flux_espectro_central_dev[i][0][0]/V
+                if incerteza/fluxo < uncertainty:
+                    flux_spec_central_mean.append(fluxo)
+                    flux_spec_central_dev.append(incerteza)
+                    flux_spec_central_energy.append(energy[i+1])
+                    #print(" Intervalo ", i,": ","\t", format(flux_espectro[-1], '.4e'), "+/-", format(flux_dev_espectro[-1], '.4e'), "[neutron/cm².s]")
+
+
+            ### MESH RADIAL ###
+            # Retirando o mesh radial
+            print('')
+            print("MESH RADIAL:")
+            print('')
+
             # Volumes das areas do mesh radial
             volume_radial = []
-            for i in range(0, self.t_divisions_radial_qtd):  # Use o número apropriado de intervalos
-                r1 = self.t_divisions_radial_r[i]
-                r2 = self.t_divisions_radial_r[i + 1]
-                h = self.t_divisions_radial_z[mesh][1] - self.t_divisions_radial_z[mesh][0]
+            for i in range(0, divisions_radial):  # Use o número apropriado de intervalos
+                r1 = r_divisions_radial[i]
+                r2 = r_divisions_radial[i + 1]
+                h = z_divisions_radial[1] - z_divisions_radial[0]
                 volume_radial.append(3.14159265359 * (r2**2 - r1**2) * h)
-                
-            for ge in range(0,len(self.t_energy_filter)):
-                flux_norm_rad[mesh].append([])
-                flux_norm_rad_dev[mesh].append([])
-                flux_norm_rad_r[mesh].append([])
-                for i in range(0,self.t_divisions_radial_qtd):
-                    fluxo=self.atividade*flux_radial[mesh][ge].mean[i][0][0]/volume_radial[i]
-                    incerteza=self.atividade*flux_radial[mesh][ge].std_dev[i][0][0]/volume_radial[i]
-                    if incerteza/fluxo < 0.05:
-                        flux_norm_rad[mesh][ge].append(fluxo)
-                        flux_norm_rad_dev[mesh][ge].append(incerteza)
-                        flux_norm_rad_r[mesh][ge].append(self.t_divisions_radial_r[i])
 
-        # PLT styles
+            flux_rad_termico = []  # Vetores para armazenar resultados
+            flux_dev_termico = []
+            flux_r_termico   = []
 
-        # ['Solarize_Light2', '_classic_test_patch', '_mpl-gallery', '_mpl-gallery-nogrid', 'bmh', 'classic', 'dark_background', 'fast', 'fivethirtyeight', 
-        # 'ggplot', 'grayscale', 'seaborn-v0_8', 'seaborn-v0_8-bright', 'seaborn-v0_8-colorblind', 'seaborn-v0_8-dark', 'seaborn-v0_8-dark-palette', 
-        # 'seaborn-v0_8-darkgrid', 'seaborn-v0_8-deep', 'seaborn-v0_8-muted', 'seaborn-v0_8-notebook', 'seaborn-v0_8-paper', 'seaborn-v0_8-pastel', 
-        # 'seaborn-v0_8-poster', 'seaborn-v0_8-talk', 'seaborn-v0_8-ticks', 'seaborn-v0_8-white', 'seaborn-v0_8-whitegrid', 'tableau-colorblind10']
+            #flux_rad_fonte   = []
+            #flux_dev_fonte   = []
+            #flux_r_fonte     = []
 
-        
+            flux_rad_rapido  = []  
+            flux_dev_rapido  = []
+            flux_r_rapido    = []
 
-        for mesh in range(0,len(self.t_tally_radial)):
+            print()
+            print(' Fluxo em intervalo térmico:')
+            print()
+            # Fluxo em intervalo térmico 
+            for i in range(0,divisions_radial):
+                fluxo=self.atividade*flux_rad_thermal_mean[i][0][0]/volume_radial[i]
+                incerteza=self.atividade*flux_rad_thermal_dev[i][0][0]/volume_radial[i]
+                if incerteza/fluxo < uncertainty:
+                    if r_divisions_radial[i]>3.52/2:
+                        flux_rad_termico.append(fluxo)
+                        flux_dev_termico.append(incerteza)
+                        flux_r_termico.append(r_divisions_radial[i])
+
+                #print(" Intervalo ", i,": ","\t", format(flux_rad_termico[i], '.4e'), "+/-", format(flux_dev_termico[i], '.4e'), "[neutron/cm².s]")
+
+            #print()
+            #print(' Fluxo em intervalo de ressonancia:')
+            #print()
+            ## Fluxo em intervalo de ressonancia 
+            #for i in range(0,divisions_radial-1):
+            #    fluxo=self.atividade*flux_rad_fonte_mean[i][0][0]/volume_radial[i]
+            #    incerteza=self.atividade*flux_rad_fonte_dev[i][0][0]/volume_radial[i]
+            #    if incerteza/fluxo < 0.05:
+            #        flux_rad_fonte.append(fluxo)
+            #        flux_dev_fonte.append(incerteza)
+            #        flux_r_fonte.append(r_divisions_radial[i])
+            #
+            #    #print(" Intervalo ", i,": ","\t", format(flux_rad_fonte[i], '.4e'), "+/-", format(flux_dev_fonte[i], '.4e'), "[neutron/cm².s]")
+
+            print()
+            print(' Fluxo em intervalo rapido:')
+            print()
+            # Fluxo em intervalo térmico 
+            for i in range(0,divisions_radial):
+                fluxo=self.atividade*flux_rad_fast_mean[i][0][0]/volume_radial[i]
+                incerteza=self.atividade*flux_rad_fast_dev[i][0][0]/volume_radial[i]
+                if incerteza/fluxo < uncertainty:
+                    if r_divisions_radial[i]>3.52/2:
+                        flux_rad_rapido.append(fluxo)
+                        flux_dev_rapido.append(incerteza)
+                        flux_r_rapido.append(r_divisions_radial[i])
+                #print(" Intervalo ", i,": ","\t", format(flux_rad_rapido[i], '.4e'), "+/-", format(flux_dev_rapido[i], '.4e'), "[neutron/cm².s]")
+
+
+
+            ###################################
+            #Radial cubico
+            ###################################
+
+            flux_cub_thermal_rc
+            flux_cub_thermal_dev_rc
+            flux_cub_fast_rc
+            flux_cub_fast_dev_rc
+
+
+            flux_rc_rad_termico = []  # Vetores para armazenar resultados
+            flux_rc_dev_termico = []
+            flux_rc_r_termico   = []
+
+            flux_rc_rad_rapido  = []  
+            flux_rc_dev_rapido  = []
+            flux_rc_r_rapido    = []
+
+            volume_cubico_radial=(
+                (x_divisions_rc[1]-x_divisions_rc[0])*
+                (y_divisions_rc[1]-y_divisions_rc[0])*
+                (z_divisions_rc[1]-z_divisions_rc[0])
+                )
+
+            print()
+            print('RC Fluxo em intervalo térmico:')
+            print()
+            # Fluxo em intervalo térmico 
+            for i in range(0,divisions_rc):
+                fluxo=self.atividade*flux_cub_thermal_rc[i][0][0]/volume_cubico_radial
+                incerteza=self.atividade*flux_cub_thermal_dev_rc[i][0][0]/volume_cubico_radial
+                if incerteza/fluxo < uncertainty:
+                    if x_divisions_rc[i]>self.diametro_cilindro_ar_fonte/2:
+                        flux_rc_rad_termico.append(fluxo)
+                        flux_rc_dev_termico.append(incerteza)
+                        flux_rc_r_termico.append(x_divisions_rc[i])
+
+            print()
+            print('RC Fluxo em intervalo rápido:')
+            print()
+            # Fluxo em intervalo térmico 
+            for i in range(0,divisions_rc):
+                fluxo=self.atividade*flux_cub_fast_rc[i][0][0]/volume_cubico_radial
+                incerteza=self.atividade*flux_cub_fast_dev_rc[i][0][0]/volume_cubico_radial
+                if incerteza/fluxo < uncertainty:
+                    if x_divisions_rc[i]>self.diametro_cilindro_ar_fonte/2:
+                        flux_rc_rad_rapido.append(fluxo)
+                        flux_rc_dev_rapido.append(incerteza)
+                        flux_rc_r_rapido.append(x_divisions_rc[i])
+
+
+
+            # PLT styles
+
+            # ['Solarize_Light2', '_classic_test_patch', '_mpl-gallery', '_mpl-gallery-nogrid', 'bmh', 'classic', 'dark_background', 'fast', 'fivethirtyeight', 
+            # 'ggplot', 'grayscale', 'seaborn-v0_8', 'seaborn-v0_8-bright', 'seaborn-v0_8-colorblind', 'seaborn-v0_8-dark', 'seaborn-v0_8-dark-palette', 
+            # 'seaborn-v0_8-darkgrid', 'seaborn-v0_8-deep', 'seaborn-v0_8-muted', 'seaborn-v0_8-notebook', 'seaborn-v0_8-paper', 'seaborn-v0_8-pastel', 
+            # 'seaborn-v0_8-poster', 'seaborn-v0_8-talk', 'seaborn-v0_8-ticks', 'seaborn-v0_8-white', 'seaborn-v0_8-whitegrid', 'tableau-colorblind10']
+
+            # Colors
+
+            # xkcd color survey, prefixed with 'xkcd:' (e.g., 'xkcd:sky blue'; case insensitive) https://xkcd.com/color/rgb/
+            # Tableau Colors from the 'T10' categorical palette:
+            # {'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'}
+
+            ################################################################################################################################
+            #Seção de choque
+            #U235 = openmc.data.IncidentNeutron.from_hdf5('/opt/nuclear-data/endfb-viii.0-hdf5/neutron/U235.h5')
+            #pprint(list(U235.reactions.values()))
+            #pprint(U235.energy)
+            #U235_f = U235[18]
+            #plt.plot(U235.energy['294K']), U235_f.xs['294K'](U235.energy['294K'])
+
+            ################################################################################################################################
+            # MESH CÚBICO THERMAL - GRAFICO 3D
+            # Função para escurecer e aumentar a vivacidade do colormap
+            def enhance_and_darken_cmap(cmap, gamma, scale):
+                colors = cmap(np.linspace(0, 1, 256)) ** gamma
+                darkened_colors = colors * scale
+                darkened_colors[:, -1] = 1  # Manter a opacidade
+                return LinearSegmentedColormap.from_list('enhanced_darkened_coolwarm', darkened_colors)
+
+            # Criar um colormap com cores mais vivas e escurecidas
+            coolwarm = plt.get_cmap('coolwarm')
+            enhanced_darkened_coolwarm = enhance_and_darken_cmap(coolwarm, gamma=1.0, scale=1.0)
+
+            plt.style.use('seaborn-v0_8-paper')
+
+            # Criando a figura e os eixos 3D
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+
+            # Plotando a superfície 3D
+            X, Y = np.meshgrid(x_divisions[1:], y_divisions[1:])
+            surf = ax.plot_surface(X, Y, amplitude_thermal, cmap=enhanced_darkened_coolwarm, edgecolor='black')
+            fig.colorbar(surf, aspect=10.0, fraction=0.02)
+            # Adicionando rótulos aos eixos
+            ax.set_xlabel('X position (cm)',size=20)
+            ax.set_ylabel('Y position (cm)',size=20)
+            ax.set_zlabel('Flux (neutrons.cm⁻².s⁻¹)',size=20,labelpad=15)
+            #ax.set_zlim(0, 27000)
+            def scientific_format(x, pos):
+                return f'{x:.2e}'
+            ax.zaxis.set_major_formatter(FuncFormatter(scientific_format))
+            
+
+            # Exibindo o plot
+            plt.show()
+
+            # MESH CÚBICO FAST - GRAFICO 3D
+            # Função para escurecer e aumentar a vivacidade do colormap
+            def enhance_and_darken_cmap(cmap, gamma, scale):
+                colors = cmap(np.linspace(0, 1, 256)) ** gamma
+                darkened_colors = colors * scale
+                darkened_colors[:, -1] = 1  # Manter a opacidade
+                return LinearSegmentedColormap.from_list('enhanced_darkened_coolwarm', darkened_colors)
+
+            # Criar um colormap com cores mais vivas e escurecidas
+            coolwarm = plt.get_cmap('coolwarm')
+            enhanced_darkened_coolwarm = enhance_and_darken_cmap(coolwarm, gamma=1.0, scale=1.0)
+
+            plt.style.use('seaborn-v0_8-paper')
+
+            # Criando a figura e os eixos 3D
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+
+            # Plotando a superfície 3D
+            X, Y = np.meshgrid(x_divisions[1:], y_divisions[1:])
+            surf = ax.plot_surface(X, Y, amplitude_fast, cmap=enhanced_darkened_coolwarm, edgecolor='black')
+            fig.colorbar(surf, aspect=10.0, fraction=0.02)
+            # Adicionando rótulos aos eixos
+            ax.set_xlabel('X position (cm)',size=20)
+            ax.set_ylabel('Y position (cm)',size=20)
+            ax.set_zlabel('Flux (neutrons.cm⁻².s⁻¹)',size=20,labelpad=15)
+            #ax.set_zlim(0, 100000)
+            def scientific_format(x, pos):
+                return f'{x:.2e}'
+            ax.zaxis.set_major_formatter(FuncFormatter(scientific_format))
+            
+            # Exibindo o plot
+            plt.show()
+            ################################################################################################################################
+            # ESPECTRO DE ENERGIA
+
+            plt.style.use('seaborn-v0_8-paper')
+            # Escala logarítimica
+            plt.xscale('log')
+            plt.yscale('log')
+
+            plt.plot(flux_spec_fuel_energy, flux_spec_fuel_mean, color='xkcd:caramel', linestyle='-', linewidth=1,marker='.', markersize=7, label='Espectro de fluxo combustivel')
+            plt.plot(flux_spec_central_energy, flux_spec_central_mean, color='xkcd:red', linestyle='-', linewidth=1,marker='.', markersize=7, label='Espectro de fluxo acima fonte')
+
+            # Títulos e legenda
+            plt.title('Flux Energy Spectrum within Fuel', fontsize=24)
+            plt.ylabel('Flux (neutrons.cm⁻².s⁻¹)', fontsize=20)
+            plt.xlabel('Energy (MeV)', fontsize=20)
+            #plt.legend(fontsize=22, loc='upper left')
+
+            # Gridlines 
+            plt.grid(True, which='both', axis='y', linestyle='--', linewidth=0.2, color='gray')
+            plt.grid(True, which='both', axis='x', linestyle='--', linewidth=0.2, color='gray') # which='major'
+            plt.tick_params(axis='both', which='major', labelsize=16)
+
+            plt.tight_layout()
+            plt.show() 
+
+            ########################################################################################################################################
+            ####           RADIAL           ######
             plt.style.use('seaborn-v0_8-paper')
 
             fig = plt.figure()
+
+            ########################################################################################################################################
+            # Convert the lists to NumPy arrays for element-wise negation
+            radius_np = np.array(r_divisions_radial[1:])
+
+            # Invert the values in radius_np
+            inverted_radius = -radius_np
+
+            # Criando o espelhamento
+            #grid = gridspec.GridSpec(nrows=1, ncols=2, wspace=0, figure=fig) # hspace=0 (horizontal space)
+
             grafico = fig.add_subplot()
+
+            # Gráficos
+            #grafico = fig.add_subplot(grid[0, 1], zorder=3)
+            #grafico.margins(0)
+            #invert_grafico = fig.add_subplot(grid[0, 0], zorder=2, sharey=grafico) 
+            #invert_grafico.margins(0)
+
+            ########################################################################################################################################
+            # Termico
+            grafico.plot( np.array(flux_rc_r_termico), flux_rc_rad_termico, color='xkcd:caramel', linestyle='-', linewidth=0.5, label='Termico')
+            grafico.plot(-np.array(flux_rc_r_termico), flux_rc_rad_termico, color='xkcd:caramel', linestyle='-', linewidth=0.5)
+
+            # Fonte
+            #grafico.plot( np.array(flux_r_fonte), flux_rad_fonte, color='xkcd:darkish green', linestyle='-', linewidth=0.5, label='Fonte')
+            #grafico.plot(-np.array(flux_r_fonte), flux_rad_fonte, color='xkcd:darkish green', linestyle='-', linewidth=0.5)
+
+            # Rapido
+            grafico.plot( np.array(flux_rc_r_rapido), flux_rc_rad_rapido, color='xkcd:royal blue', linestyle='-',  linewidth=0.5, label='Rapido')
+            grafico.plot(-np.array(flux_rc_r_rapido), flux_rc_rad_rapido, color='xkcd:royal blue', linestyle='-', linewidth=0.5)
+
+            ########################################################################################################################################
+
+            # y-axis label and legend
+            plt.ylabel('Flux (neutrons.cm⁻².s⁻¹)', fontsize=20)
             grafico.legend(fontsize=22)
+
+            plt.tick_params(axis='both', which='major', labelsize=12)
+            plt.gca().yaxis.set_major_formatter(ticker.ScalarFormatter())
+            plt.gca().yaxis.get_major_formatter().set_powerlimits((0, 0))
+
+            # Centered x-axis label
+            plt.xlabel( 'Radial Position (cm)', fontsize=20)
+
+            # Centered title between the two subplots
+            plt.suptitle('Radial flux distribution', x=0.56, y=0.90, ha='center', fontsize=24)
+
+            # expanding the y-axis limit
+            #grafico.set_ylim(0, 1050)
+            #invert_grafico.set_ylim(0, 5.0e+13)
+
+            # clean up overlapping ticks and set axis to not visible
+            #grafico.tick_params(axis='y', labelleft=False, left=False)
+            #grafico.spines['left'].set_visible(False)
+            #invert_grafico.spines['right'].set_visible(False)
+
+            # Set x-axis limit in invert_mcnp to include zero point
+            #invert_grafico.set_xlim(-radius_np[-1], 0)  # Adjust the range to include the zero point
+
+            # Add gridlines to make zero point more visible
+            #invert_grafico.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
             grafico.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
-            plt.suptitle(f'Radial flux distribution in {self.t_tally_radial_name[mesh]}', x=0.53, y=0.90, ha='center', fontsize=24)
-            plt.xlabel('Radial Position (cm)', fontsize=20)
-            plt.ylabel('Flux (neutrons/cm².s)', fontsize=20)
             
-            for ge in range(0,len(self.t_energy_filter)):
-                grafico.plot(
-                    np.array(flux_norm_rad_r[mesh][ge]),
-                    flux_norm_rad[mesh][ge],
-                    color=self.t_energy_filter_color[ge],
-                    linestyle='-',
-                    linewidth=0.5,
-                    label=self.t_energy_filter_name[ge]
-                    )
-                grafico.plot(
-                    -np.array(flux_norm_rad_r[mesh][ge]),
-                    flux_norm_rad[mesh][ge],
-                    color=self.t_energy_filter_color[ge],
-                    linestyle='-',
-                    linewidth=0.5,
-                    )
-            
+
             plt.tight_layout()
             plt.show()
 
 
-    def outros():
-        """
-        # Acesse os resultados do tally radial
-        nu                          = sp.get_tally(scores=['nu-fission'])
-        fission                     = sp.get_tally(scores=['fission'])
-        flux_radial_thermal         = sp.get_tally(scores=['flux'], name='MESH_Radial_Termico')
-        flux_radial_fast            = sp.get_tally(scores=['flux'], name='MESH_Radial_Rapido')
-        flux_espectro_fuel          = sp.get_tally(scores=['flux'], name='Fluxo no universo combustível')
-        flux_cubico                 = sp.get_tally(scores=['flux'], name='MESH_Cubico')
-        flux_axial_comb_thermal     = sp.get_tally(scores=['flux'], name='MESH_Axial_Comb_Thermal')
-        flux_axial_central_thermal  = sp.get_tally(scores=['flux'], name='MESH_Axial_Central_Thermal')
-        flux_axial_comb_fast        = sp.get_tally(scores=['flux'], name='MESH_Axial_Comb_Fast')
-        flux_axial_central_fast     = sp.get_tally(scores=['flux'], name='MESH_Axial_Central_Fast')
+            ########################################################################################################################################
+            #####         AXIAL         ######
             
-        nu_mean                         = nu.mean
-        nu_std_dev                      = nu.std_dev
-        fission_mean                    = fission.mean
-        fission_std_dev                 = fission.std_dev
-        flux_espectro_mean              = flux_espectro_fuel.mean
-        flux_espectro_dev               = flux_espectro_fuel.std_dev
-        #flux_rad_fonte_mean             = flux_radial_fonte.mean
-        #flux_rad_fonte_dev              = flux_radial_fonte.std_dev
-        flux_rad_fast_mean              = flux_radial_fast.mean
-        flux_rad_fast_dev               = flux_radial_fast.std_dev
-        flux_rad_thermal_mean           = flux_radial_thermal.mean
-        flux_rad_thermal_dev            = flux_radial_thermal.std_dev
-        flux_cub                        = flux_cubico.mean
-        flux_cub_dev                    = flux_cubico.std_dev
-        flux_axial_comb_thermal_mean    = flux_axial_comb_thermal.mean
-        flux_axial_comb_thermal_dev     = flux_axial_comb_thermal.std_dev
-        flux_axial_central_thermal_mean = flux_axial_central_thermal.mean
-        flux_axial_central_thermal_dev  = flux_axial_central_thermal.std_dev
-        flux_axial_comb_fast_mean       = flux_axial_comb_fast.mean
-        flux_axial_comb_fast_dev        = flux_axial_comb_fast.std_dev
-        flux_axial_central_fast_mean    = flux_axial_central_fast.mean
-        flux_axial_central_fast_dev     = flux_axial_central_fast.std_dev
+            plt.style.use('seaborn-v0_8-paper')
+            #marker='.', markersize=7,
+            #marker='^', markersize=5,
 
-        # Volumes das areas do mesh axial central
-        volume_axial_central = []
-        for i in range(0, divisions_axial-1):  # Use o número apropriado de intervalos
-            z1 = z_divisions_axial[i]
-            z2 = z_divisions_axial[i + 1]
-            r = r_divisions_axial_central[1] - r_divisions_axial_central[0]
-            volume_axial_central.append(np.pi * (z2 - z1) * r**2)
+            # Converter listas para arrays NumPy
+            fluxo_axial_central_thermal = np.array(fluxo_axial_central_thermal)
+            fluxo_z_central_thermal = np.array(fluxo_z_central_thermal)
 
-        # Volumes das areas do mesh axial comb
-        volume_axial_comb = []
-        for i in range(0, divisions_axial-1):  # Use o número apropriado de intervalos
-            z1 = z_divisions_axial[i]
-            z2 = z_divisions_axial[i + 1]
-            r = r_divisions_axial_comb[1] - r_divisions_axial_comb[0]
-            volume_axial_comb.append(np.pi * (z2 - z1) * r**2)
+            fluxo_axial_central_fast = np.array(fluxo_axial_central_fast)
+            fluxo_z_central_fast = np.array(fluxo_z_central_fast)
 
-        fluxo_axial_central_thermal = []
-        fluxo_axial_central_thermal_dev = []
-        fluxo_z_central_thermal = []
+            condicao_thermal = fluxo_z_central_thermal > 0
+            fluxo_axial_central_thermal_positivos = fluxo_axial_central_thermal[condicao_thermal]
+            fluxo_z_central_thermal_positivos = fluxo_z_central_thermal[condicao_thermal]
+            fluxo_axial_central_thermal_negativos = fluxo_axial_central_thermal[~condicao_thermal]
+            fluxo_z_central_thermal_negativos = fluxo_z_central_thermal[~condicao_thermal]
 
-        print()
-        print(' MESH axial central thermal:')
-        for i in range(0,divisions_axial-1):
-            fluxo=self.atividade*flux_axial_central_thermal_mean[i][0][0]/volume_axial_central[i]
-            incerteza=self.atividade*flux_axial_central_thermal_dev[i][0][0]/volume_axial_central[i]
-            if incerteza/fluxo < 1:
-                fluxo_axial_central_thermal.append(fluxo)
-                fluxo_axial_central_thermal_dev.append(incerteza)
-                fluxo_z_central_thermal.append(z_divisions_axial[i])
+            condicao_fast = fluxo_z_central_fast > 0
+            fluxo_axial_central_fast_positivos = fluxo_axial_central_fast[condicao_fast]
+            fluxo_z_central_fast_positivos = fluxo_z_central_fast[condicao_fast]
+            fluxo_axial_central_fast_negativos = fluxo_axial_central_fast[~condicao_fast]
+            fluxo_z_central_fast_negativos = fluxo_z_central_fast[~condicao_fast]
 
-        fluxo_axial_comb_thermal = []
-        fluxo_axial_comb_thermal_dev = []
-        fluxo_z_comb_thermal = []
+            plt.plot(fluxo_axial_central_thermal_positivos, fluxo_z_central_thermal_positivos, color='xkcd:red', linestyle='-',  linewidth=1, label='Central Thermal')
+            plt.plot(fluxo_axial_central_thermal_negativos, fluxo_z_central_thermal_negativos, color='xkcd:red', linestyle='-',  linewidth=1)
+            plt.plot(fluxo_axial_central_fast_positivos, fluxo_z_central_fast_positivos, color='xkcd:blue', linestyle='-',  linewidth=1, label='Central Fast')
+            plt.plot(fluxo_axial_central_fast_negativos, fluxo_z_central_fast_negativos, color='xkcd:blue', linestyle='-')
+            
+            
+            plt.plot(fluxo_axial_comb_thermal, fluxo_z_comb_thermal, color='xkcd:orange', linestyle='-',  linewidth=1, label='Comb Thermal')
+            plt.plot(fluxo_axial_comb_fast, fluxo_z_comb_fast, color='xkcd:darkish green', linestyle='-',  linewidth=1, label='Comb Fast')
 
-        print()
-        print(' MESH axial comb thermal:')
-        for i in range(0,divisions_axial-1):
-            fluxo=self.atividade*flux_axial_comb_thermal_mean[i][0][0]/volume_axial_comb[i]
-            incerteza=self.atividade*flux_axial_comb_thermal_dev[i][0][0]/volume_axial_comb[i]
-            if incerteza/fluxo < 1:
-                fluxo_axial_comb_thermal.append(fluxo)
-                fluxo_axial_comb_thermal_dev.append(incerteza)
-                fluxo_z_comb_thermal.append(z_divisions_axial[i])
-        
-        fluxo_axial_central_fast = []
-        fluxo_axial_central_fast_dev = []
-        fluxo_z_central_fast = []
+            # Legendas
+            plt.legend(fontsize=22)
 
-        print()
-        print(' MESH axial central fast:')
-        for i in range(0,divisions_axial-1):
-            fluxo=self.atividade*flux_axial_central_fast_mean[i][0][0]/volume_axial_central[i]
-            incerteza=self.atividade*flux_axial_central_fast_dev[i][0][0]/volume_axial_central[i]
-            if incerteza/fluxo < 1:
-                fluxo_axial_central_fast.append(fluxo)
-                fluxo_axial_central_fast_dev.append(incerteza)
-                fluxo_z_central_fast.append(z_divisions_axial[i])
+            plt.tick_params(axis='both', which='major', labelsize=12)
+            plt.gca().xaxis.set_major_formatter(ticker.ScalarFormatter())
+            plt.gca().xaxis.get_major_formatter().set_powerlimits((0, 0))
 
-        fluxo_axial_comb_fast = []
-        fluxo_axial_comb_fast_dev = []
-        fluxo_z_comb_fast = []
+            # Títulos e escala
+            plt.title('Axial flux distribution', fontsize=24)
+            plt.ylabel('Axial position (cm)', fontsize=20)
+            plt.xlabel('Flux (neutrons.cm⁻².s⁻¹)', fontsize=20)
 
-        print()
-        print(' MESH axial comb fast:')
-        for i in range(0,divisions_axial-1):
-            fluxo=self.atividade*flux_axial_comb_fast_mean[i][0][0]/volume_axial_comb[i]
-            incerteza=self.atividade*flux_axial_comb_fast_dev[i][0][0]/volume_axial_comb[i]
-            if incerteza/fluxo < 1:
-                fluxo_axial_comb_fast.append(fluxo)
-                fluxo_axial_comb_fast_dev.append(incerteza)
-                fluxo_z_comb_fast.append(z_divisions_axial[i])
+            # Add gridlines to make zero point more visible
+            plt.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
 
-        print()
-        print(' MESH cúbico:')
-        V = (x_divisions[1]-x_divisions[0])*(y_divisions[1]-y_divisions[0])*(z_divisions[1]-z_divisions[0])
-        amplitude = self.atividade*flux_cub.reshape((self.divisions_cubico_qtd-1, self.divisions_cubico_qtd-1))/V
-        amplitude_dev = self.atividade*flux_cub_dev.reshape((self.divisions_cubico_qtd-1, self.divisions_cubico_qtd-1))/V
-        amplitude_dev_per = np.zeros((len(amplitude_dev),len(amplitude_dev)))
-        for i in range(0,self.divisions_cubico_qtd-1):
-            for j in range(0,self.divisions_cubico_qtd-1):
-                if amplitude[i][j] != 0:
-                    amplitude_dev_per[i][j] = amplitude_dev[i][j] / amplitude[i][j]
-                    if amplitude_dev_per[i][j] > 0.15:
-                        amplitude[i][j] = None
-                else:
-                    amplitude_dev_per[i][j] = 1
-                    amplitude[i][j] = None
-
-
-        # Função para escurecer e aumentar a vivacidade do colormap
-        def enhance_and_darken_cmap(cmap, gamma, scale):
-            colors = cmap(np.linspace(0, 1, 256)) ** gamma
-            darkened_colors = colors * scale
-            darkened_colors[:, -1] = 1  # Manter a opacidade
-            return LinearSegmentedColormap.from_list('enhanced_darkened_coolwarm', darkened_colors)
-
-        # Criar um colormap com cores mais vivas e escurecidas
-        coolwarm = plt.get_cmap('coolwarm')
-        enhanced_darkened_coolwarm = enhance_and_darken_cmap(coolwarm, gamma=1.5, scale=1.0)
-
-
-        # Criando a figura e os eixos 3D
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        # Plotando a superfície 3D
-        X, Y = np.meshgrid(x_divisions[1:], y_divisions[1:])
-        surf = ax.plot_surface(X, Y, amplitude, cmap='jet', edgecolor='black')
-        fig.colorbar(surf, aspect=1)
-        # Adicionando rótulos aos eixos
-        ax.set_xlabel('X position (cm)')
-        ax.set_ylabel('Y position (cm)')
-        ax.set_zlabel('Flux (neutrons/cm².s)')
-        
-        
-        # Exibindo o plot
-        plt.show()
-
-
-        
-        # Retirando o mesh radial
-        print('')
-        print("MESH RADIAL:")
-        print('')
-
-        # Volumes das areas do mesh radial
-        volume_radial = []
-        for i in range(0, self.divisions_radial-1):  # Use o número apropriado de intervalos
-            r1 = r_divisions_radial[i]
-            r2 = r_divisions_radial[i + 1]
-            h = z_divisions_radial[1] - z_divisions_radial[0]
-            volume_radial.append(3.14159265359 * (r2**2 - r1**2) * h)
-
-        flux_rad_termico = []  # Vetores para armazenar resultados
-        flux_dev_termico = []
-        flux_r_termico   = []
-
-        #flux_rad_fonte   = []
-        #flux_dev_fonte   = []
-        #flux_r_fonte     = []
-
-        flux_rad_rapido  = []  
-        flux_dev_rapido  = []
-        flux_r_rapido    = []
-
-        print()
-        print(' Fluxo em intervalo térmico:')
-        print()
-        # Fluxo em intervalo térmico 
-        for i in range(0,self.divisions_radial-1):
-            fluxo=self.atividade*flux_rad_thermal_mean[i][0][0]/volume_radial[i]
-            incerteza=self.atividade*flux_rad_thermal_dev[i][0][0]/volume_radial[i]
-            if incerteza/fluxo < 0.05:
-                flux_rad_termico.append(fluxo)
-                flux_dev_termico.append(incerteza)
-                flux_r_termico.append(r_divisions_radial[i])
-
-            #print(" Intervalo ", i,": ","\t", format(flux_rad_termico[i], '.4e'), "+/-", format(flux_dev_termico[i], '.4e'), "[neutron/cm².s]")
-
-        #print()
-        #print(' Fluxo em intervalo de ressonancia:')
-        #print()
-        ## Fluxo em intervalo de ressonancia 
-        #for i in range(0,self.divisions_radial-1):
-        #    fluxo=self.atividade*flux_rad_fonte_mean[i][0][0]/volume_radial[i]
-        #    incerteza=self.atividade*flux_rad_fonte_dev[i][0][0]/volume_radial[i]
-        #    if incerteza/fluxo < 0.05:
-        #        flux_rad_fonte.append(fluxo)
-        #        flux_dev_fonte.append(incerteza)
-        #        flux_r_fonte.append(r_divisions_radial[i])
-        #
-        #    #print(" Intervalo ", i,": ","\t", format(flux_rad_fonte[i], '.4e'), "+/-", format(flux_dev_fonte[i], '.4e'), "[neutron/cm².s]")
-
-        print()
-        print(' Fluxo em intervalo rapido:')
-        print()
-        # Fluxo em intervalo térmico 
-        for i in range(0,self.divisions_radial-1):
-            fluxo=self.atividade*flux_rad_fast_mean[i][0][0]/volume_radial[i]
-            incerteza=self.atividade*flux_rad_fast_dev[i][0][0]/volume_radial[i]
-            if incerteza/fluxo < 0.05:
-                flux_rad_rapido.append(fluxo)
-                flux_dev_rapido.append(incerteza)
-                flux_r_rapido.append(r_divisions_radial[i])
-            #print(" Intervalo ", i,": ","\t", format(flux_rad_rapido[i], '.4e'), "+/-", format(flux_dev_rapido[i], '.4e'), "[neutron/cm².s]")
-
-
-        # PLT styles
-
-        # ['Solarize_Light2', '_classic_test_patch', '_mpl-gallery', '_mpl-gallery-nogrid', 'bmh', 'classic', 'dark_background', 'fast', 'fivethirtyeight', 
-        # 'ggplot', 'grayscale', 'seaborn-v0_8', 'seaborn-v0_8-bright', 'seaborn-v0_8-colorblind', 'seaborn-v0_8-dark', 'seaborn-v0_8-dark-palette', 
-        # 'seaborn-v0_8-darkgrid', 'seaborn-v0_8-deep', 'seaborn-v0_8-muted', 'seaborn-v0_8-notebook', 'seaborn-v0_8-paper', 'seaborn-v0_8-pastel', 
-        # 'seaborn-v0_8-poster', 'seaborn-v0_8-talk', 'seaborn-v0_8-ticks', 'seaborn-v0_8-white', 'seaborn-v0_8-whitegrid', 'tableau-colorblind10']
-
-        # Colors
-
-        # xkcd color survey, prefixed with 'xkcd:' (e.g., 'xkcd:sky blue'; case insensitive) https://xkcd.com/color/rgb/
-        # Tableau Colors from the 'T10' categorical palette:
-        # {'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'}
-
-        ################################################################################################################################
-        #Seção de choque
-        U235 = openmc.data.IncidentNeutron.from_hdf5('/opt/nuclear-data/endfb-viii.0-hdf5/neutron/U235.h5')
-        #pprint(list(U235.reactions.values()))
-        #pprint(U235.energy)
-        U235_f = U235[18]
-        #plt.plot(U235.energy['294K']), U235_f.xs['294K'](U235.energy['294K'])
-        plt.plot(flux_energy, flux_espectro, color='xkcd:caramel', linestyle='-', linewidth=1,marker='.', markersize=7)
-
-        # Escala logarítimica
-        plt.xscale('log')
-        plt.yscale('log')
-
-        # Títulos e legenda
-        plt.title('Flux Energy Spectrum within Fuel', fontsize=24)
-        plt.ylabel('Flux (neutrons/cm².s)', fontsize=20)
-        plt.xlabel('Energy (MeV)', fontsize=20)
-        #plt.legend(fontsize=22, loc='upper left')
-
-        # Gridlines 
-        plt.grid(True, which='both', axis='y', linestyle='--', linewidth=0.2, color='gray')
-        plt.grid(True, which='both', axis='x', linestyle='--', linewidth=0.2, color='gray') # which='major'
-        plt.tick_params(axis='both', which='major', labelsize=16)
-
-        plt.tight_layout()
-        plt.show() 
-
-        ########################################################################################################################################
-        
-        ####           RADIAL           ######
-        plt.style.use('seaborn-v0_8-paper')
-
-        fig = plt.figure()
-
-        ########################################################################################################################################
-        # Convert the lists to NumPy arrays for element-wise negation
-        radius_np = np.array(r_divisions_radial[1:])
-
-        # Invert the values in radius_np
-        inverted_radius = -radius_np
-
-        # Criando o espelhamento
-        #grid = gridspec.GridSpec(nrows=1, ncols=2, wspace=0, figure=fig) # hspace=0 (horizontal space)
-
-        grafico = fig.add_subplot()
-
-        # Gráficos
-        #grafico = fig.add_subplot(grid[0, 1], zorder=3)
-        #grafico.margins(0)
-        #invert_grafico = fig.add_subplot(grid[0, 0], zorder=2, sharey=grafico) 
-        #invert_grafico.margins(0)
-
-        ########################################################################################################################################
-        # Termico
-        grafico.plot( np.array(flux_r_termico), flux_rad_termico, color='xkcd:caramel', linestyle='-', linewidth=0.5, label='Termico')
-        grafico.plot(-np.array(flux_r_termico), flux_rad_termico, color='xkcd:caramel', linestyle='-', linewidth=0.5)
-
-        # Fonte
-        #grafico.plot( np.array(flux_r_fonte), flux_rad_fonte, color='xkcd:darkish green', linestyle='-', linewidth=0.5, label='Fonte')
-        #grafico.plot(-np.array(flux_r_fonte), flux_rad_fonte, color='xkcd:darkish green', linestyle='-', linewidth=0.5)
-
-        # Rapido
-        grafico.plot( np.array(flux_r_rapido), flux_rad_rapido, color='xkcd:royal blue', linestyle='-',  linewidth=0.5, label='Rapido')
-        grafico.plot(-np.array(flux_r_rapido), flux_rad_rapido, color='xkcd:royal blue', linestyle='-', linewidth=0.5)
-
-        ########################################################################################################################################
-
-        # y-axis label and legend
-        plt.ylabel('Flux (neutrons/cm².s)', fontsize=20)
-        grafico.legend(fontsize=22)
-
-        # Centered x-axis label
-        fig.text(0.54, 0.005, 'Radial Position (cm)', ha='center', fontsize=20)
-
-        # Centered title between the two subplots
-        plt.suptitle('Radial flux distribution', x=0.53, y=0.90, ha='center', fontsize=24)
-
-        # expanding the y-axis limit
-        #grafico.set_ylim(0, 1050)
-        #invert_grafico.set_ylim(0, 5.0e+13)
-
-        # clean up overlapping ticks and set axis to not visible
-        #grafico.tick_params(axis='y', labelleft=False, left=False)
-        #grafico.spines['left'].set_visible(False)
-        #invert_grafico.spines['right'].set_visible(False)
-
-        # Set x-axis limit in invert_mcnp to include zero point
-        #invert_grafico.set_xlim(-radius_np[-1], 0)  # Adjust the range to include the zero point
-
-        # Add gridlines to make zero point more visible
-        #invert_grafico.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
-        grafico.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
-
-        plt.tight_layout()
-        plt.show()
-
-        #####         AXIAL         ######
-        
-        plt.style.use('seaborn-v0_8-paper')
-        #marker='.', markersize=7,
-        #marker='^', markersize=5,
-        plt.plot(fluxo_axial_central_thermal, fluxo_z_central_thermal, color='xkcd:red', linestyle='-',  linewidth=1, label='Central Thermal')
-        plt.plot(fluxo_axial_central_fast, fluxo_z_central_fast, color='xkcd:blue', linestyle='-',  linewidth=1, label='Central Fast')
-        plt.plot(fluxo_axial_comb_thermal, fluxo_z_comb_thermal, color='xkcd:orange', linestyle='-',  linewidth=1, label='Comb Thermal')
-        plt.plot(fluxo_axial_comb_fast, fluxo_z_comb_fast, color='xkcd:darkish green', linestyle='-',  linewidth=1, label='Comb Fast')
-
-        # Legendas
-        plt.legend(fontsize=22)
-
-        # Títulos e escala
-        plt.title('Axial flux distribution', fontsize=24)
-        plt.ylabel('Axial position (cm)', fontsize=20)
-        plt.xlabel('Flux (neutrons/cm².s)', fontsize=20)
-
-        # Add gridlines to make zero point more visible
-        plt.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
-
-        plt.tight_layout()
-        plt.show()
-        """
+            plt.tight_layout()
+            plt.show()
