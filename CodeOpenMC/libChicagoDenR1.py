@@ -14,7 +14,10 @@ from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import FuncFormatter
 import matplotlib.ticker as ticker
+import warnings
 
+# Ignore warnings
+warnings.filterwarnings("ignore")
 
 os.system('clear')
 
@@ -980,7 +983,7 @@ class ChigagoDenR1:
             print("################################################")
             sp = openmc.StatePoint('statepoint.'+str(self.ciclos)+'.h5')
 
-            uncertainty = 0.10
+            uncertainty = 0.05
 
             # Acesse os resultados do tally radial
             nu                   = sp.get_tally(scores=['nu-fission'])
@@ -1077,7 +1080,7 @@ class ChigagoDenR1:
             # Volume de fuga acima do combustível mais perto do centro
             volume_dose_top_comb = np.pi * (self.z_divisions_central_leak[1]-self.z_divisions_central_leak[0]) * (self.r_divisions_central_leak[1]**2)
             # Volume de fuga mpedio do topo
-            volume_dose_top_avarage = np.pi * (self.z_divisions_central_leak[1]-self.z_divisions_central_leak[0]) * (6.5**2)
+            volume_dose_top_avarage = np.pi * (self.z_divisions_central_leak[1]-self.z_divisions_central_leak[0]) * (self.r_divisions_avarage_leak[1]**2)
 
             dose_central_n = []
             dose_central_n_dev = []
@@ -1491,22 +1494,31 @@ class ChigagoDenR1:
             enhanced_darkened_coolwarm = enhance_and_darken_cmap(coolwarm, gamma=1.0, scale=1.0)
 
             plt.style.use('seaborn-v0_8-paper')
+            from matplotlib.ticker import LogFormatter
 
             # Criando a figura e os eixos 3D
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
 
+            #Formatação cientifica
+            def scientific_format(x, pos):
+                return f'{x:.1e}'.replace('e+0', 'e').replace('e+','e')
+
             # Plotando a superfície 3D
             X, Y = np.meshgrid(x_divisions[1:], y_divisions[1:])
             surf = ax.plot_surface(X, Y, amplitude_thermal, cmap=enhanced_darkened_coolwarm, edgecolor='black')
-            fig.colorbar(surf, aspect=10.0, fraction=0.02)
+            cbar = fig.colorbar(surf, aspect=10.0, fraction=0.02, pad=0.018)
+            cbar.set_label('Flux (neutrons.cm⁻².s⁻¹)', size=20, labelpad=8)
+            cbar.ax.tick_params(axis='y', labelsize=12)
+            cbar.ax.yaxis.set_major_formatter(FuncFormatter(scientific_format))
             # Adicionando rótulos aos eixos
-            ax.set_xlabel('X position (cm)',size=20)
-            ax.set_ylabel('Y position (cm)',size=20)
-            ax.set_zlabel('Flux (neutrons.cm⁻².s⁻¹)',size=20,labelpad=15)
+            ax.set_xlabel('X position (cm)', size=20, labelpad=6)
+            ax.set_ylabel('Y position (cm)', size=20, labelpad=6)
+            #ax.set_zlabel('Flux (neutrons.cm⁻².s⁻¹)',size=20,labelpad=15)
+            ax.tick_params(axis='x', labelsize=12, pad=1)
+            ax.tick_params(axis='y', labelsize=12, pad=1)
+            ax.tick_params(axis='z', labelsize=11, pad=9)
             #ax.set_zlim(0, 27000)
-            def scientific_format(x, pos):
-                return f'{x:.2e}'
             ax.zaxis.set_major_formatter(FuncFormatter(scientific_format))
             
 
@@ -1534,14 +1546,18 @@ class ChigagoDenR1:
             # Plotando a superfície 3D
             X, Y = np.meshgrid(x_divisions[1:], y_divisions[1:])
             surf = ax.plot_surface(X, Y, amplitude_fast, cmap=enhanced_darkened_coolwarm, edgecolor='black')
-            fig.colorbar(surf, aspect=10.0, fraction=0.02)
+            cbar = fig.colorbar(surf, aspect=10.0, fraction=0.02, pad=0.018)
+            cbar.set_label('Flux (neutrons.cm⁻².s⁻¹)', size=20, labelpad=8)
+            cbar.ax.tick_params(axis='y', labelsize=12)
+            cbar.ax.yaxis.set_major_formatter(FuncFormatter(scientific_format))
             # Adicionando rótulos aos eixos
-            ax.set_xlabel('X position (cm)',size=20)
-            ax.set_ylabel('Y position (cm)',size=20)
-            ax.set_zlabel('Flux (neutrons.cm⁻².s⁻¹)',size=20,labelpad=15)
-            #ax.set_zlim(0, 100000)
-            def scientific_format(x, pos):
-                return f'{x:.2e}'
+            ax.set_xlabel('X position (cm)', size=20, labelpad=6)
+            ax.set_ylabel('Y position (cm)', size=20, labelpad=6)
+            #ax.set_zlabel('Flux (neutrons.cm⁻².s⁻¹)', size=20, labelpad=30)
+            ax.tick_params(axis='x', labelsize=12, pad=1)
+            ax.tick_params(axis='y', labelsize=12, pad=1)
+            ax.tick_params(axis='z', labelsize=11, pad=9)
+            ax.set_zlim(0, 175000)
             ax.zaxis.set_major_formatter(FuncFormatter(scientific_format))
             
             # Exibindo o plot
@@ -1554,14 +1570,14 @@ class ChigagoDenR1:
             plt.xscale('log')
             plt.yscale('log')
 
-            plt.plot(flux_spec_fuel_energy, flux_spec_fuel_mean, color='xkcd:caramel', linestyle='-', linewidth=1,marker='.', markersize=7, label='Espectro de fluxo combustivel')
-            plt.plot(flux_spec_central_energy, flux_spec_central_mean, color='xkcd:red', linestyle='-', linewidth=1,marker='.', markersize=7, label='Espectro de fluxo acima fonte')
+            plt.plot(flux_spec_fuel_energy, flux_spec_fuel_mean, color='xkcd:red', linestyle='-', linewidth=1,marker='^', markersize=5, label='Inside the annular fuel ')
+            plt.plot(flux_spec_central_energy, flux_spec_central_mean, color='xkcd:royal blue', linestyle='-', linewidth=1,marker='.', markersize=7, label='Above source')
 
             # Títulos e legenda
-            plt.title('Flux Energy Spectrum within Fuel', fontsize=24)
+            plt.title('Flux Spectrum at Irradiation Positions', fontsize=24)
             plt.ylabel('Flux (neutrons.cm⁻².s⁻¹)', fontsize=20)
-            plt.xlabel('Energy (MeV)', fontsize=20)
-            #plt.legend(fontsize=22, loc='upper left')
+            plt.xlabel('Energy (eV)', fontsize=20)
+            plt.legend(fontsize=20, loc='upper left')
 
             # Gridlines 
             plt.grid(True, which='both', axis='y', linestyle='--', linewidth=0.2, color='gray')
@@ -1594,35 +1610,38 @@ class ChigagoDenR1:
             #grafico.margins(0)
             #invert_grafico = fig.add_subplot(grid[0, 0], zorder=2, sharey=grafico) 
             #invert_grafico.margins(0)
-
+            linewidth=1.5
             ########################################################################################################################################
             # Termico
-            grafico.plot( np.array(flux_rc_r_termico), flux_rc_rad_termico, color='xkcd:caramel', linestyle='-', linewidth=0.5, label='Termico')
-            grafico.plot(-np.array(flux_rc_r_termico), flux_rc_rad_termico, color='xkcd:caramel', linestyle='-', linewidth=0.5)
+            grafico.plot( np.array(flux_rc_r_termico), flux_rc_rad_termico, color='xkcd:red', linestyle='-', linewidth=linewidth, label='Thermal group')
+            grafico.plot(-np.array(flux_rc_r_termico), flux_rc_rad_termico, color='xkcd:red', linestyle='-', linewidth=linewidth)
 
             # Fonte
             #grafico.plot( np.array(flux_r_fonte), flux_rad_fonte, color='xkcd:darkish green', linestyle='-', linewidth=0.5, label='Fonte')
             #grafico.plot(-np.array(flux_r_fonte), flux_rad_fonte, color='xkcd:darkish green', linestyle='-', linewidth=0.5)
 
             # Rapido
-            grafico.plot( np.array(flux_rc_r_rapido), flux_rc_rad_rapido, color='xkcd:royal blue', linestyle='-',  linewidth=0.5, label='Rapido')
-            grafico.plot(-np.array(flux_rc_r_rapido), flux_rc_rad_rapido, color='xkcd:royal blue', linestyle='-', linewidth=0.5)
+            grafico.plot( np.array(flux_rc_r_rapido), flux_rc_rad_rapido, color='xkcd:royal blue', linestyle='-',  linewidth=linewidth, label='Fast group')
+            grafico.plot(-np.array(flux_rc_r_rapido), flux_rc_rad_rapido, color='xkcd:royal blue', linestyle='-', linewidth=linewidth)
 
             ########################################################################################################################################
 
             # y-axis label and legend
             plt.ylabel('Flux (neutrons.cm⁻².s⁻¹)', fontsize=20)
-            grafico.legend(fontsize=22)
+            plt.yscale('log')
+            grafico.legend(fontsize=20)
 
             plt.tick_params(axis='both', which='major', labelsize=12)
-            plt.gca().yaxis.set_major_formatter(ticker.ScalarFormatter())
-            plt.gca().yaxis.get_major_formatter().set_powerlimits((0, 0))
+            #plt.gca().yaxis.get_offset_text().set_size(12)
+            #plt.gca().yaxis.set_major_formatter(ticker.ScalarFormatter())
+            #plt.gca().yaxis.get_major_formatter().set_powerlimits((0, 0))
 
             # Centered x-axis label
             plt.xlabel( 'Radial Position (cm)', fontsize=20)
 
             # Centered title between the two subplots
-            plt.suptitle('Radial flux distribution', x=0.56, y=0.90, ha='center', fontsize=24)
+            #plt.suptitle('Radial Flux Distribution', x=0.56, y=0.88, ha='center', fontsize=24)
+            plt.title('Radial Flux Distribution',loc='center', fontsize=24)
 
             # expanding the y-axis limit
             #grafico.set_ylim(0, 1050)
@@ -1649,8 +1668,6 @@ class ChigagoDenR1:
             #####         AXIAL         ######
             
             plt.style.use('seaborn-v0_8-paper')
-            #marker='.', markersize=7,
-            #marker='^', markersize=5,
 
             # Converter listas para arrays NumPy
             fluxo_axial_central_thermal = np.array(fluxo_axial_central_thermal)
@@ -1671,26 +1688,28 @@ class ChigagoDenR1:
             fluxo_axial_central_fast_negativos = fluxo_axial_central_fast[~condicao_fast]
             fluxo_z_central_fast_negativos = fluxo_z_central_fast[~condicao_fast]
 
-            plt.plot(fluxo_axial_central_thermal_positivos, fluxo_z_central_thermal_positivos, color='xkcd:red', linestyle='-',  linewidth=1, label='Central Thermal')
-            plt.plot(fluxo_axial_central_thermal_negativos, fluxo_z_central_thermal_negativos, color='xkcd:red', linestyle='-',  linewidth=1)
-            plt.plot(fluxo_axial_central_fast_positivos, fluxo_z_central_fast_positivos, color='xkcd:blue', linestyle='-',  linewidth=1, label='Central Fast')
-            plt.plot(fluxo_axial_central_fast_negativos, fluxo_z_central_fast_negativos, color='xkcd:blue', linestyle='-')
+            plt.plot(fluxo_axial_central_thermal_positivos, fluxo_z_central_thermal_positivos, color='xkcd:burnt orange', linestyle='-',  linewidth=linewidth, label='Central Thermal')
+            plt.plot(fluxo_axial_central_thermal_negativos, fluxo_z_central_thermal_negativos, color='xkcd:burnt orange', linestyle='-',  linewidth=linewidth)
+            plt.plot(fluxo_axial_central_fast_positivos, fluxo_z_central_fast_positivos, color='xkcd:cerulean', linestyle='-',  linewidth=linewidth, label='Central Fast')
+            plt.plot(fluxo_axial_central_fast_negativos, fluxo_z_central_fast_negativos, color='xkcd:cerulean', linestyle='-',  linewidth=linewidth)
             
             
-            plt.plot(fluxo_axial_comb_thermal, fluxo_z_comb_thermal, color='xkcd:orange', linestyle='-',  linewidth=1, label='Comb Thermal')
-            plt.plot(fluxo_axial_comb_fast, fluxo_z_comb_fast, color='xkcd:darkish green', linestyle='-',  linewidth=1, label='Comb Fast')
+            plt.plot(fluxo_axial_comb_thermal, fluxo_z_comb_thermal, color='xkcd:red', linestyle='--',  linewidth=linewidth, label='Comb Thermal')
+            plt.plot(fluxo_axial_comb_fast, fluxo_z_comb_fast, color='xkcd:royal blue', linestyle='--',  linewidth=linewidth, label='Comb Fast')
 
             # Legendas
-            plt.legend(fontsize=22)
+            plt.legend(fontsize=20)
 
             plt.tick_params(axis='both', which='major', labelsize=12)
-            plt.gca().xaxis.set_major_formatter(ticker.ScalarFormatter())
-            plt.gca().xaxis.get_major_formatter().set_powerlimits((0, 0))
+            #plt.gca().xaxis.set_major_formatter(ticker.ScalarFormatter())
+            #plt.gca().xaxis.get_major_formatter().set_powerlimits((0, 0))
 
             # Títulos e escala
-            plt.title('Axial flux distribution', fontsize=24)
+            plt.xscale('log')
+            plt.title('Axial flux distribution at Irradiation Positions', fontsize=24)
             plt.ylabel('Axial position (cm)', fontsize=20)
             plt.xlabel('Flux (neutrons.cm⁻².s⁻¹)', fontsize=20)
+            plt.gca().xaxis.get_offset_text().set_size(12)
 
             # Add gridlines to make zero point more visible
             plt.grid(True, which='both', linestyle='--', linewidth=0.2, color='gray')
