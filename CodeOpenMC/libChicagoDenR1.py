@@ -1217,7 +1217,7 @@ class ChigagoDenR1:
                 fluxo=self.atividade*flux_axial_central_thermal_mean[i][0][0]/volume_axial_central[i]
                 incerteza=self.atividade*flux_axial_central_thermal_dev[i][0][0]/volume_axial_central[i]
                 if incerteza/fluxo < uncertainty:
-                    if z_divisions_axial[i]>self.centro_fonte+10 or z_divisions_axial[i]<self.centro_fonte-10:
+                    if z_divisions_axial[i]<self.centro_fonte+10 and z_divisions_axial[i]>self.centro_fonte-10:
                         fluxo_axial_central_thermal.append(fluxo)
                         fluxo_axial_central_thermal_dev.append(incerteza)
                         fluxo_z_central_thermal.append(z_divisions_axial[i])
@@ -1248,7 +1248,7 @@ class ChigagoDenR1:
                 fluxo=self.atividade*flux_axial_central_fast_mean[i][0][0]/volume_axial_central[i]
                 incerteza=self.atividade*flux_axial_central_fast_dev[i][0][0]/volume_axial_central[i]
                 if incerteza/fluxo < uncertainty:
-                    if z_divisions_axial[i]>self.centro_fonte+10 or z_divisions_axial[i]<self.centro_fonte-10:
+                    if z_divisions_axial[i]<self.centro_fonte+10 and z_divisions_axial[i]>self.centro_fonte-10:
                         fluxo_axial_central_fast.append(fluxo)
                         fluxo_axial_central_fast_dev.append(incerteza)
                         fluxo_z_central_fast.append(z_divisions_axial[i])
@@ -1671,10 +1671,36 @@ class ChigagoDenR1:
 
             # Converter listas para arrays NumPy
             fluxo_axial_central_thermal = np.array(fluxo_axial_central_thermal)
+            fluxo_axial_comb_thermal = np.array(fluxo_axial_comb_thermal)
             fluxo_z_central_thermal = np.array(fluxo_z_central_thermal)
+            fluxo_z_comb_thermal = np.array(fluxo_z_comb_thermal)
 
             fluxo_axial_central_fast = np.array(fluxo_axial_central_fast)
+            fluxo_axial_comb_fast = np.array(fluxo_axial_comb_fast)
             fluxo_z_central_fast = np.array(fluxo_z_central_fast)
+            fluxo_z_comb_fast = np.array(fluxo_z_comb_fast)
+
+            condicao_fuel_thermal_avarage = (fluxo_z_comb_thermal > -13.58) & (fluxo_z_comb_thermal < 9.16)
+            condicao_central_thermal_avarage = (fluxo_z_central_thermal > 7.943) & (fluxo_z_central_thermal < 12.547)
+            condicao_fuel_fast_avarage = (fluxo_z_comb_fast > -13.58) & (fluxo_z_comb_fast < 9.16)
+            condicao_central_fast_avarage = (fluxo_z_central_fast > 7.943) & (fluxo_z_central_fast < 12.547)
+            fluxo_thermal_fuel_avarage = fluxo_axial_comb_thermal[condicao_fuel_thermal_avarage]
+            fluxo_thermal_central_avarage = fluxo_axial_central_thermal[condicao_central_thermal_avarage]
+            fluxo_fast_fuel_avarage = fluxo_axial_comb_fast[condicao_fuel_fast_avarage]
+            fluxo_fast_central_avarage = fluxo_axial_central_fast[condicao_central_fast_avarage]
+            print()
+            print('Altura considerada acima da fonte:', (12.547-7.943), 'Posições: 7.943 para 12.547')
+            print()
+            print('Altura considerada centro do combustível:', (13.58+9.16), 'Posições: -13.58 para 9.16')
+            print()
+            print('Média de fluxo térmico dentro do combustível:', "{:e}".format(np.mean(fluxo_thermal_fuel_avarage)))
+            print('')
+            print('Média de fluxo rápido dentro do combustível:', "{:e}".format(np.mean(fluxo_fast_fuel_avarage)))
+            print('')
+            print('Média de fluxo térmico acima da fonte:', "{:e}".format(np.mean(fluxo_thermal_central_avarage)))
+            print('')
+            print('Média de fluxo rápido acima da fonte:', "{:e}".format(np.mean(fluxo_fast_central_avarage)))
+            print()
 
             condicao_thermal = fluxo_z_central_thermal > 0
             fluxo_axial_central_thermal_positivos = fluxo_axial_central_thermal[condicao_thermal]
