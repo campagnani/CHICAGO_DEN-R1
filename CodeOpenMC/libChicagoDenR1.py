@@ -393,57 +393,58 @@ class ChigagoDenR1:
         ####################################################################################################################################
         ############################### Celulas e superfícies específicas para o Universo Vareta Central (fonte)############################
         ####################################################################################################################################
-
-        ##Planos internos a vareta central
-        suporte_interno_central            = fundo_tanque_superior   + 5*2.54
-        refletor_inferior_interno_central  = suporte_interno_central - 0.2
-        limite_clad_fonte_inferior         = self.centro_fonte - 10 + altura_fonte
-        self.limite_fonte_inferior         = limite_clad_fonte_inferior + 0.1
-        self.limite_fonte_superior         = self.limite_fonte_inferior + 19.8
-        limite_clad_fonte_superior         = self.limite_fonte_superior + 0.1
-        self.diametro_cilindro_fonte       = 1.28433406196 # cm
-        self.diametro_cilindro_ar_fonte    = 2.8 # cm
-        diametro_clad_fonte                = 3.0 # cm
-
-        plano_superior_suporte_fonte = openmc.ZPlane(z0=suporte_interno_central)
-        plano_inferior_suporte_fonte = openmc.ZPlane(z0=refletor_inferior_interno_central)
-        plano_superior_fonte         = openmc.ZPlane(z0=self.limite_fonte_superior)
-        plano_inferior_fonte         = openmc.ZPlane(z0=self.limite_fonte_inferior)
-        plano_clad_fonte_superior    = openmc.ZPlane(z0=limite_clad_fonte_superior)
-        plano_clad_fonte_inferior    = openmc.ZPlane(z0=limite_clad_fonte_inferior)
-
-        superficie_radial_fonte      = openmc.ZCylinder(r=self.diametro_cilindro_fonte/2)
-        superficie_radial_ar_fonte   = openmc.ZCylinder(r=self.diametro_cilindro_ar_fonte/2)
-        superficie_radial_clad_fonte = openmc.ZCylinder(r=diametro_clad_fonte/2)
-
-        self.celula_refletor_inferior_suporte_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_inferior_suporte_fonte&-cilindro_raio_interno_vareta)
-        self.celula_suporte_interno_fonte    = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_suporte_fonte&-plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
-        self.celula_fonte                    = openmc.Cell(fill=self.fonte,   region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_fonte)  
-        self.celula_clad_fonte               = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_clad_fonte&+superficie_radial_ar_fonte
-                                                                        | +plano_clad_fonte_inferior&-plano_inferior_fonte&-superficie_radial_clad_fonte
-                                                                        | +plano_superior_fonte&-plano_clad_fonte_superior&-superficie_radial_clad_fonte)  
-        self.celula_ar_fonte                 = openmc.Cell(fill=self.ar,          region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_ar_fonte&+superficie_radial_fonte)
-        self.celula_refletor_lateral_fonte   = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_inferior&-plano_clad_fonte_superior&-cilindro_raio_interno_vareta&+superficie_radial_clad_fonte)
-        self.celula_refletor_superior_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_superior&-plano_refletor_lateral_superior&-cilindro_raio_interno_vareta)
-        self.celula_refletor_inferior_fonte  = openmc.Cell(fill=self.moderador,   region=-plano_clad_fonte_inferior&+plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
-
-        # CÉLULAS QUE FORAM DUPLICADAS PELO FATO DE NÃO PODER REUTILIZAR CÉLULAS PARA OUTROS UNIVERSOS
-        self.celula_moderador1_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
-        self.celula_moderador2_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
-        self.celula_moderador3_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
-        self.celula_grade_inferior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
-        self.celula_grade_superior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
-        self.celula_clad_vareta_fonte         = openmc.Cell(fill=self.aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
-        self.celula_ar_externo_vareta_fonte   = openmc.Cell(fill=self.ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_externo_vareta)
-        self.celula_ar_superior_interno_fonte = openmc.Cell(fill=self.ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
-
-
-        self.universo_fonte = openmc.Universe(cells=(self.celula_clad_vareta_fonte,self.celula_refletor_inferior_fonte,self.celula_suporte_interno_fonte,
-                                                self.celula_fonte,self.celula_clad_fonte,self.celula_refletor_lateral_fonte, self.celula_ar_fonte,
-                                                self.celula_refletor_superior_fonte,self.celula_ar_externo_vareta_fonte,self.celula_refletor_inferior_suporte_fonte,
-                                                self.celula_grade_superior_fonte, self.celula_grade_inferior_fonte,self.celula_ar_superior_interno_fonte,
-                                                self.celula_moderador1_fonte, self.celula_moderador2_fonte, self.celula_moderador3_fonte,))  # Identidade da fonte
+        if altura_fonte is not None:
         
+            ##Planos internos a vareta central
+            suporte_interno_central            = fundo_tanque_superior   + 5*2.54
+            refletor_inferior_interno_central  = suporte_interno_central - 0.2
+            limite_clad_fonte_inferior         = self.centro_fonte - 10 + altura_fonte
+            self.limite_fonte_inferior         = limite_clad_fonte_inferior + 0.1
+            self.limite_fonte_superior         = self.limite_fonte_inferior + 19.8
+            limite_clad_fonte_superior         = self.limite_fonte_superior + 0.1
+            self.diametro_cilindro_fonte       = 1.28433406196 # cm
+            self.diametro_cilindro_ar_fonte    = 2.8 # cm
+            diametro_clad_fonte                = 3.0 # cm
+
+            plano_superior_suporte_fonte = openmc.ZPlane(z0=suporte_interno_central)
+            plano_inferior_suporte_fonte = openmc.ZPlane(z0=refletor_inferior_interno_central)
+            plano_superior_fonte         = openmc.ZPlane(z0=self.limite_fonte_superior)
+            plano_inferior_fonte         = openmc.ZPlane(z0=self.limite_fonte_inferior)
+            plano_clad_fonte_superior    = openmc.ZPlane(z0=limite_clad_fonte_superior)
+            plano_clad_fonte_inferior    = openmc.ZPlane(z0=limite_clad_fonte_inferior)
+
+            superficie_radial_fonte      = openmc.ZCylinder(r=self.diametro_cilindro_fonte/2)
+            superficie_radial_ar_fonte   = openmc.ZCylinder(r=self.diametro_cilindro_ar_fonte/2)
+            superficie_radial_clad_fonte = openmc.ZCylinder(r=diametro_clad_fonte/2)
+
+            self.celula_refletor_inferior_suporte_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_inferior_suporte_fonte&-cilindro_raio_interno_vareta)
+            self.celula_suporte_interno_fonte    = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_suporte_fonte&-plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
+            self.celula_fonte                    = openmc.Cell(fill=self.fonte,   region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_fonte)  
+            self.celula_clad_fonte               = openmc.Cell(fill=self.aluminio,    region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_clad_fonte&+superficie_radial_ar_fonte
+                                                                            | +plano_clad_fonte_inferior&-plano_inferior_fonte&-superficie_radial_clad_fonte
+                                                                            | +plano_superior_fonte&-plano_clad_fonte_superior&-superficie_radial_clad_fonte)  
+            self.celula_ar_fonte                 = openmc.Cell(fill=self.ar,          region=+plano_inferior_fonte&-plano_superior_fonte&-superficie_radial_ar_fonte&+superficie_radial_fonte)
+            self.celula_refletor_lateral_fonte   = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_inferior&-plano_clad_fonte_superior&-cilindro_raio_interno_vareta&+superficie_radial_clad_fonte)
+            self.celula_refletor_superior_fonte  = openmc.Cell(fill=self.moderador,   region=+plano_clad_fonte_superior&-plano_refletor_lateral_superior&-cilindro_raio_interno_vareta)
+            self.celula_refletor_inferior_fonte  = openmc.Cell(fill=self.moderador,   region=-plano_clad_fonte_inferior&+plano_superior_suporte_fonte&-cilindro_raio_interno_vareta)
+
+            # CÉLULAS QUE FORAM DUPLICADAS PELO FATO DE NÃO PODER REUTILIZAR CÉLULAS PARA OUTROS UNIVERSOS
+            self.celula_moderador1_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_fundo_tanque_superior&-plano_grade_inferior_1&+cilindro_raio_externo_vareta)
+            self.celula_moderador2_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_inferior_2&-plano_grade_superior_1&+cilindro_raio_externo_vareta)
+            self.celula_moderador3_fonte          = openmc.Cell(fill=self.moderador,   region=+plano_grade_superior_2&-plano_refletor_lateral_superior&+cilindro_raio_externo_vareta)
+            self.celula_grade_inferior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_inferior_1&-plano_grade_inferior_2&+cilindro_raio_externo_vareta)
+            self.celula_grade_superior_fonte      = openmc.Cell(fill=self.aluminio,    region=+plano_grade_superior_1&-plano_grade_superior_2&+cilindro_raio_externo_vareta)
+            self.celula_clad_vareta_fonte         = openmc.Cell(fill=self.aluminio,    region=+plano_fundo_tanque_superior&-plano_vareta_altura&+cilindro_raio_interno_vareta&-cilindro_raio_externo_vareta)
+            self.celula_ar_externo_vareta_fonte   = openmc.Cell(fill=self.ar,          region=+plano_refletor_lateral_superior&-plano_vareta_altura&+cilindro_raio_externo_vareta)
+            self.celula_ar_superior_interno_fonte = openmc.Cell(fill=self.ar,          region=+plano_elemento_combustivel&-plano_vareta_altura&-cilindro_raio_interno_vareta)
+
+
+            self.universo_fonte = openmc.Universe(cells=(self.celula_clad_vareta_fonte,self.celula_refletor_inferior_fonte,self.celula_suporte_interno_fonte,
+                                                    self.celula_fonte,self.celula_clad_fonte,self.celula_refletor_lateral_fonte, self.celula_ar_fonte,
+                                                    self.celula_refletor_superior_fonte,self.celula_ar_externo_vareta_fonte,self.celula_refletor_inferior_suporte_fonte,
+                                                    self.celula_grade_superior_fonte, self.celula_grade_inferior_fonte,self.celula_ar_superior_interno_fonte,
+                                                    self.celula_moderador1_fonte, self.celula_moderador2_fonte, self.celula_moderador3_fonte,))  # Identidade da fonte
+            
         ####################################################################################################################################
         ####################################################################################################################################
 
